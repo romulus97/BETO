@@ -13,6 +13,7 @@ import Fertilization
 import Available_Corn_Stover
 import Truck
 import Comminution
+import Dilute_Acid_Hydrolysis
 
 ###################################
 # CONVERSIONS
@@ -89,6 +90,34 @@ kg_comm_stover_ha = comm [0] # kg comminuted stover per ha
 
 # 300 - Dilute acid hydrolysis 
 
+# Yeild & Conversions:
+Matrl_Handling_Energy = 241.79 # MJ/ha
+water_to_stover_ratio = 4
+acid_purity = 8 # acide weight percent (%)
+H2SO4 = 98.079 # H2SO4 molar mass
+NH3 = 17.031 # NH3 molar mass
+Cp_water = 4.184 # water heat capacity kJ/kg C
+Cp_stover = 1.03 # Stover heat capacity kJ/kg C 
+Cp_H2SO4 = 1.34 # H2SO4 heat capacity kJ/kg C
+final_temp = 175 # degree C
+int_temp = 20 # degree C 
+temp_diff =final_temp - int_temp # Temprture difference that the mixture should be heated (degree C)
+
+# Conversion rates:
+Cellulose_to_Glucose = 81.3 # %
+Hemicellulose_to_Xylose =67 # %
+Total_Mass_Conv = 97.3 3 %
+
+dah = Dilute_Acid_Hydrolysis.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
+         H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff ,Total_Mass_Conv )
+dah [0] = Heating_energy
+dah [1] = strong_acid
+
+
+
+
+
+# DAH Chemical make up after conversion:
 
 ###################################
 # LIFE CYCLE ASSESSMENT
