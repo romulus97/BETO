@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Created on Fri Jul  3 16:20:20 2020
 
@@ -14,6 +14,9 @@ import Available_Corn_Stover
 import Truck
 import Comminution
 import Dilute_Acid_Hydrolysis
+import Enzymatic_Hydrolysis
+import Distillation_Dehydration
+import Final_Product
 
 ###################################
 # CONVERSIONS
@@ -22,6 +25,10 @@ gal_to_acre_feet = 3.07e-6 # Gallons to Acre-feet
 lb_to_kg= 0.453515 # pounds to kilograms
 Bushels_corn_to_kg = 25.4
 Miles_to_km = 1.60934
+kWh_to_MJ = 3.6
+gal_to_L = 3.78541
+kg_to_ton = 0.00110231
+ton_to_bu = 35.71428571
 
 
 ###################################
@@ -104,24 +111,54 @@ int_temp = 20 # degree C
 temp_diff =final_temp - int_temp # Temprture difference that the mixture should be heated (degree C)
 
 # Conversion rates:
+Cellulose = 0.4105
 Cellulose_to_Glucose = 81.3 # %
 Hemicellulose_to_Xylose =67 # %
-Total_Mass_Conv = 97.3 3 %
+Total_Mass_Conv = 97.3 # %
 
 dah = Dilute_Acid_Hydrolysis.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
-         H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff ,Total_Mass_Conv )
-dah [0] = Heating_energy
-dah [1] = strong_acid
+         H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff , Total_Mass_Conv )
 
+Heating_energy = dah [0]
+kg_PreHydrolysate_Slurry_per_ha =dah [1]
+kg_Stover_PostDAH_per_ha = dah[2]
 
+# 400 - Enzymatic Hydrolysis
 
+#Conversions and Yield
+Water_to_Prehydrolysate = 4 # Ratio
+Cellulase_to_Cellulose = 0.02 # Ratio
+slurry_int_temp = 175 # dgree C
+slurry_final_temp = 48 # degree C
+slurry_temp_diff = slurry_int_temp - slurry_final_temp
 
+eh = Enzymatic_Hydrolysis.EH (kg_Stover_PostDAH_per_ha , water_to_stover_ratio , Cellulase_to_Cellulose , Cp_stover , slurry_temp_diff , Cellulose)
+Water = eh [0]
+Enzyme = eh [1]
+Cooling_Energy = eh [2]
+kg_Hydrolysate_per_ha = eh[3]
 
-# DAH Chemical make up after conversion:
+# 600 - Fermentation 
+ethanol_to_biomass = 0.561034373 # kg of ethanol to kg of biomass
+kg_ethanol_per_ha = kg_Stover_PostDAH_per_ha * ethanol_to_biomass * 0.511 * 0.931
+kg_corn_beer_per_ha = (kg_ethanol_per_ha / 0.054 ) - kg_ethanol_per_ha
 
-###################################
-# LIFE CYCLE ASSESSMENT
+# 700 - Distillation and Dehydration
 
+ethanol_per_kWh = 1.81 # litters of ethanol produced per kWh electricity 
+MJ_per_ethanol =7.7 # MJs of heat required per litters of ethanol produced
+kg_ethanol_to_L_ethanol = 1.267427123 # kg ethanol to litters of ethanol 
 
+dad = Distillation_Dehydration.DAD(ethanol_per_kWh , kWh_to_MJ ,kg_ethanol_per_ha ,kg_ethanol_to_L_ethanol ,
+ MJ_per_ethanol , kg_Stover_PostDAH_per_ha )
 
+Electricity_per_ha = dad [0]
+Heat_per_ha = dad [1]
+kg_lignin_per_ha = dad [2]
 
+# 900 Final Product 
+
+fp = Final_Product.FP ( kg_ethanol_per_ha , kg_ethanol_to_L_ethanol , gal_to_L , kg_stover_per_ha , kg_to_ton , ton_to_bu )
+L_ethanol_per_ha = fp [0]
+gal_ethanol_per_ton_stover = fp [1]
+gal_ethanol_per_bu_corn_grain = fp [2]

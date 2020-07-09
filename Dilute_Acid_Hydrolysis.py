@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Tue Jul  7 19:32:20 2020
 
@@ -19,5 +18,8 @@ def DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 ,
     
     kg_Stover_PostDAH_per_ha = kg_comm_stover_ha *Total_Mass_Conv / 100
     
-    return (Heating_energy)
+    
+    
+    return (Heating_energy , kg_PreHydrolysate_Slurry_per_ha , kg_Stover_PostDAH_per_ha )
+
     
