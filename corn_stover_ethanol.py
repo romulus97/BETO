@@ -7,16 +7,9 @@ Created on Fri Jul  3 16:20:20 2020
 
 import numpy as np
 import pandas as pd
-import Land_Dedication_Seeding
-import Irrigation
-import Fertilization
-import Available_Corn_Stover
-import Truck
-import Comminution
-import Dilute_Acid_Hydrolysis
-import Enzymatic_Hydrolysis
-import Distillation_Dehydration
-import Final_Product
+import Agriculture
+import Process
+
 
 ###################################
 # CONVERSIONS
@@ -56,16 +49,16 @@ Percent_to_hammer_mill = 97 # percent of corn stover goes into hammer mill is co
 
 #110 - Land dedication and seeding
 arable_land = 1 #ha
-seeded_land = Land_Dedication_Seeding.LDS(arable_land) # Seeded land in hectares
+seeded_land = Agriculture.LDS(arable_land) # Seeded land in hectares
 
 #120 - Irrigation
-h2o_per_acre = Irrigation.Irr(bu_per_acre) # H2O per acre
+h2o_per_acre = Agriculture.Irr(bu_per_acre) # H2O per acre
 gals_h2o_per_acre = h2o_per_acre*27154 # ASK JACK AND EVAN ???
 gals_h2o_per_ha = gals_h2o_per_acre*ha_to_acre
 
 #130 - Fertilizers (N, P, K)
 fert_per_ha = fertilizer_per_acre * lb_to_kg * ha_to_acre # Converting the fertilization requirment from lb/acre to kg/ha
-fertilizer_per_ha = Fertilization.Frt (fert_per_ha, arable_land) # Total fertilizer required for the arable lands
+fertilizer_per_ha = Agriculture.Frt (fert_per_ha, arable_land) # Total fertilizer required for the arable lands
 
 #140 - Soil pH managment
 Lime_per_ha = Lime_tretment * ha_to_acre
@@ -80,18 +73,18 @@ L_deisel= L_diesel_per_ha
 #180 - Harvest Yeild 
 kg_corn_grain_per_ha = bu_per_acre * Bushels_corn_to_kg * ha_to_acre
 corn_stover_per_ha = kg_corn_grain_per_ha * 0.8867
-kg_stover_per_ha = Available_Corn_Stover.Stover(corn_stover_per_ha, arable_land)
+kg_stover_per_ha = Agriculture.Stover(corn_stover_per_ha, arable_land)
 
 #190 - Storage and Transportation
 transportation = field_to_biorefinary * Miles_to_km #km
-num_of_trucks = Truck.TRK (kg_stover_per_ha, Truck_Capasity)
+num_of_trucks = Agriculture.TRK (kg_stover_per_ha, Truck_Capasity)
 
 ###################################
 
 # BIOPROCESS NAD CONVERSION 200 - 600
  
 # 200 - Size Reduction Process - Comminution 
-comm = Comminution.COMM (kg_stover_per_ha , Comminution_energy , Percent_to_hammer_mill)
+comm = Process.COMM (kg_stover_per_ha , Comminution_energy , Percent_to_hammer_mill)
 Comminution_Electricity = comm [1] #MJ/ha
 kg_comm_stover_ha = comm [0] # kg comminuted stover per ha
 
@@ -116,7 +109,7 @@ Cellulose_to_Glucose = 81.3 # %
 Hemicellulose_to_Xylose =67 # %
 Total_Mass_Conv = 97.3 # %
 
-dah = Dilute_Acid_Hydrolysis.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
+dah = Process.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
          H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff , Total_Mass_Conv )
 
 Heating_energy = dah [0]
@@ -132,7 +125,7 @@ slurry_int_temp = 175 # dgree C
 slurry_final_temp = 48 # degree C
 slurry_temp_diff = slurry_int_temp - slurry_final_temp
 
-eh = Enzymatic_Hydrolysis.EH (kg_Stover_PostDAH_per_ha , water_to_stover_ratio , Cellulase_to_Cellulose , Cp_stover , slurry_temp_diff , Cellulose)
+eh = Process.EH (kg_Stover_PostDAH_per_ha , water_to_stover_ratio , Cellulase_to_Cellulose , Cp_stover , slurry_temp_diff , Cellulose)
 Water = eh [0]
 Enzyme = eh [1]
 Cooling_Energy = eh [2]
@@ -149,7 +142,7 @@ ethanol_per_kWh = 1.81 # litters of ethanol produced per kWh electricity
 MJ_per_ethanol =7.7 # MJs of heat required per litters of ethanol produced
 kg_ethanol_to_L_ethanol = 1.267427123 # kg ethanol to litters of ethanol 
 
-dad = Distillation_Dehydration.DAD(ethanol_per_kWh , kWh_to_MJ ,kg_ethanol_per_ha ,kg_ethanol_to_L_ethanol ,
+dad = Process.DAD(ethanol_per_kWh , kWh_to_MJ ,kg_ethanol_per_ha ,kg_ethanol_to_L_ethanol ,
  MJ_per_ethanol , kg_Stover_PostDAH_per_ha )
 
 Electricity_per_ha = dad [0]
@@ -158,7 +151,7 @@ kg_lignin_per_ha = dad [2]
 
 # 900 Final Product 
 
-fp = Final_Product.FP ( kg_ethanol_per_ha , kg_ethanol_to_L_ethanol , gal_to_L , kg_stover_per_ha , kg_to_ton , ton_to_bu )
+fp = Process.FP ( kg_ethanol_per_ha , kg_ethanol_to_L_ethanol , gal_to_L , kg_stover_per_ha , kg_to_ton , ton_to_bu )
 L_ethanol_per_ha = fp [0]
 gal_ethanol_per_ton_stover = fp [1]
 gal_ethanol_per_bu_corn_grain = fp [2]
