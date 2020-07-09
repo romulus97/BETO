@@ -106,12 +106,12 @@ temp_diff =final_temp - int_temp # Temprture difference that the mixture should 
 # Conversion rates:
 Cellulose_to_Glucose = 81.3 # %
 Hemicellulose_to_Xylose =67 # %
-Total_Mass_Conv = 97.3 3 %
+Total_Mass_Conv = 97.3 #%
 
-dah = Dilute_Acid_Hydrolysis.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
-         H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff ,Total_Mass_Conv )
-dah [0] = Heating_energy
-dah [1] = strong_acid
+# dah = Dilute_Acid_Hydrolysis.DAH (kg_comm_stover_ha , water_to_stover_ratio , acid_purity , NH3 , 
+#          H2SO4 , Cp_water , Cp_stover , Cp_H2SO4 ,temp_diff ,Total_Mass_Conv )
+# dah [0] = Heating_energy
+# dah [1] = strong_acid
 
 
 
