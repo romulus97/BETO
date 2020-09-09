@@ -146,14 +146,14 @@ for i in range(0,99,9):
 # display the tradeoff frontier    
 import matplotlib.pyplot as plt
 
-plt.scatter([s.objectives[0] for s in feasible_solutions],
-            [s.objectives[1] for s in feasible_solutions])
+plt.scatter([s.objectives[0]/1000 for s in feasible_solutions],
+            [s.objectives[1] for s in feasible_solutions],c='red',alpha=0.5)
 
 for i in idx:
     
-    plt.scatter(obj1[i],obj2[i],s=36,c='red')
+    plt.scatter(obj1[i]/1000,obj2[i],s=60,c='cyan',edgecolors='gray')
     
-plt.xlabel("Costs ($)")
+plt.xlabel("Costs ($1000s)")
 plt.ylabel("Distance (km)")
 plt.show()
 
