@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-def sim(acres,bu_per_acre):
+def sim(hectares,bu_per_acre):
     
     ###################################
     # CONVERSIONS
@@ -72,4 +72,4 @@ def sim(acres,bu_per_acre):
     corn_stover_per_ha = kg_corn_grain_per_ha * 0.8867 #kg/ha
     kg_stover_per_ha = corn_stover_per_ha * arable_land * 0.5
         
-    return acres*kg_stover_per_ha
+    return hectares*kg_stover_per_ha
