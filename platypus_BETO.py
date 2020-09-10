@@ -10,6 +10,7 @@ import numpy as np
 import time
 import corn_stover_cultivation as CS_cultivation
 
+#hello world!
 
 start = time.time()
 
@@ -105,7 +106,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(1000000)
+algorithm.run(300000)
 
 stop = time.time()
 elapsed = (stop - start)/60
