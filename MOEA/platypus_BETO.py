@@ -9,8 +9,7 @@ import pandas as pd
 import numpy as np
 import time
 import corn_stover_cultivation as CS_cultivation
-
-#hello world!
+import corn_stover_processing as CS_processing
 
 start = time.time()
 
@@ -62,30 +61,57 @@ def simulate(
         R_idx = refinery_idx # location of refinery in simple case
         ):
     
+    # Empty variables 
     CS_kg = 0 # corn stover production in kg
-    CS_costs = 0 # total costs
+    CS_cultivation_capex = 0 # total costs
+    CS_cultivation_opex = 0
     CS_travel = 0 # travel distance
+    CS_flow = np.zeros((len(counties),len(counties)))
+    
     Constraints = [] # constraints
        
-    #Cultivation   
+    # Cultivation   
     for i in range(0,len(counties)):
         
-        CS = CS_cultivation.sim(vars[i],C_Y[i])
-        CS_kg += CS
+        # Per ha values (need to expand)
+        (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha, herbicide_per_ha)  = CS_cultivation.sim(C_Y[i])
+        CS_kg += CS_per_ha*vars[i]
+
+        # Cultivation costs
+        CS_cultivation_capex += vars[i]*LC[i]
         
-        # NOTE CONVERT TO HA!
-        CS_costs += vars[i]*LC[i]
+        START HERE!!!
         
-    # Flow to refinery
+        CS_cultivation_opex += vars[i]*()
+        
+        # Flow to refinery
+        for j in range(0,len(counties)):
+            
+            # County to county mass transfer (kg CS)
+            CS_flow[i,j] += vars[(i+1)*len(counties) + j]
+        
+            # Total truck miles
+            CS_travel += DM[i,j]*(CS_flow[i,j]/20000)
     
-    # Simple case - random location of single refinery of infinite size
-        CS_travel += DM[i,refinery_idx]*(CS/20000)
-    
-    # Processing        
-    
+    # Refinery ops
+    for i in range(0,len(counties)):
+        
+        # Find total mass transferred for county 'i'
+        CS_gate_kg = sum(CS_flow[:,i])
+        
+        # Ethanol produced at refinery in county 'i'
+        CS_ethanol[i] = CS_processing.sim()
+        
+        
+            
+    # Refinery capex
+            
+        # CS_capex = 
+        
     # Constraints
-        Constraints.append(vars[i] - LL[i])
-        Constraints.append(-vars[i])        
+            Constraints.append
+        Constraints.append(vars[i] - LL[i])   
+       
     
     Constraints.append(4490000-CS_kg)
     Constraints.append(CS_kg - 4510000)
@@ -99,14 +125,15 @@ def simulate(
 #####################################################################
 
 # Define Platypus problem
-problem = Problem(len(counties),2,200)
-problem.types[:] = Real(0,100)
+UB = 10000000
+problem = Problem(len(counties),2,101)
+problem.types[:] = Real(0,UB)
 problem.constraints[:] = "<=0"
 problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(300000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
