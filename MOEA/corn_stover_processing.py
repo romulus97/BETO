@@ -7,8 +7,6 @@ Created on Fri Jul  3 16:20:20 2020
 
 import numpy as np
 import pandas as pd
-import Agriculture
-import Process
 
 def sim(kg_stover):
     
