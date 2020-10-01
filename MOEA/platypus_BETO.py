@@ -62,12 +62,11 @@ def simulate(
         C_Y = bu_per_acre_C_yield, # corn yield per acre
         LL = land_limits, # land limits
         DM = dist_map, # distance mapping
-        R_idx = refinery_idx # location of refinery in simple case
         ):
     
     # Empty variables 
     CS_farm_kg = 0 # corn stover production in kg
-    CS_cultivation_capex = 0 # total costs
+    CS_cultivation_capex = 0 
     CS_cultivation_opex = 0
     CS_travel_opex = 0
     CS_flow_matrix = np.zeros((len(counties),len(counties)))
@@ -133,8 +132,8 @@ def simulate(
             CS_refinery_capex+= 400000000*(scale)**.6
     
     # Sets ethanol production quota (L)
-    Constraints.append(1990000-sum(CS_ethanol))
-    Constraints.append(sum(CS_ethanol) - 2010000)
+    Constraints.append(19000-sum(CS_ethanol))
+    Constraints.append(sum(CS_ethanol) - 21000)
     Constraints = list(Constraints)
     
     # Returns list of objectives, Constraints
