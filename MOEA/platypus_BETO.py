@@ -31,9 +31,6 @@ bu_per_acre_C_yield = df_geo['C_yield'].values
 df_dist = pd.read_excel('geo.xlsx',sheet_name='distance_lookup',header=0)
 dist_map = np.zeros((len(counties),len(counties)))
 
-# Simple refinery case (remove later)
-refinery_idx = int(np.round(np.float(np.random.rand(1)*98),decimals=0))
- 
 # convert look-up table to matrix
 for i in range(0,len(counties)):
     c1 = counties[i]
@@ -60,7 +57,7 @@ kg_to_L_Ethanol = 1.273723
     
 # simulation model (function to be evaluated by MOEA)
 def simulate(
-        vars, # planted corn stover in hectares
+        vars, # cultivation hectares per county, mass flows to refineries
         LC = land_costs, # land costs per county
         C_Y = bu_per_acre_C_yield, # corn yield per acre
         LL = land_limits, # land limits
