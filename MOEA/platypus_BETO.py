@@ -2,6 +2,7 @@
 Created on Fri Jul  3 16:20:20 2020
 
 @author: jkern
+branched off commit 6248b89b4792e3bfdc2d66dcea47c4ad91f88946, "re-org" 9/10/20
 """
 
 from platypus import NSGAII, Problem, Real 
