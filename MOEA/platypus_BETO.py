@@ -18,31 +18,67 @@ start = time.time()
 #####################################################################
 
 # import county level data
-df_geo = pd.read_excel('geo.xlsx',sheet_name='counties',header=0)
+df_geo = pd.read_excel('geodata_total.xlsx',header=0)
+counties = list(df_geo['co_state'])
+
+#specify grouping
+groups = 20
+
+#county-to-hub data
+filename = 'C2H_' + str(groups) + '.xlsx'
+df_C2H = pd.read_excel(filename,header=0)
+c = list(df_C2H['co_state'])
+
+#eliminate and counties that don't appear in both lists
+for i in counties:
+    idx = counties.index(i)
+    if i in c:
+        pass
+    else:
+        df_geo = df_geo.drop(index=idx)
+
+df_geo = df_geo.reset_index(drop=True)
 fips = df_geo['fips'].values
-counties = df_geo['name']
-land_costs = df_geo.loc[:,'land_cost'].values # $ per ha
-land_limits = df_geo['land_limit'].values # ha
+counties = list(df_geo['co_state'])
+land_costs = df_geo.loc[:,'land_cost_dpa'].values # $ per acre
+land_limits = df_geo['land_limits_acre'].values # county area in acres
+counties = list(df_geo['co_state'])
 
 # Corn Stover
-bu_per_acre_C_yield = df_geo['C_yield'].values 
+bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
-# import distance look-up table
-df_dist = pd.read_excel('geo.xlsx',sheet_name='distance_lookup',header=0)
-dist_map = np.zeros((len(counties),len(counties)))
+# hub grouping information, distance look-up tables
+dist_C2H = []
+county_hubs = []
+for county in counties:
+    
+    # distance from each county to pre-defined hub
+    dist_C2H.append(df_C2H.loc[df_C2H['co_state']==county,'travel_dist_km'].values[0])
+    
+    # list of hubs assigned to each county
+    county_hubs.append(df_C2H.loc[df_C2H['co_state']==county,'destinationID'].values[0])
 
-# convert look-up table to matrix
+#hub-to-hub data
+filename = 'H2H_' + str(groups) + '.xlsx'
+df_H2H = pd.read_excel(filename,header=0)
+hubs = list(df_H2H['OriginID'].unique())
+
+dist_map = np.zeros((len(hubs),len(hubs)))
+
+# convert look-up table to distance matrix
+for i in range(0,len(hubs)):
+    c1 = hubs[i]
+    for j in range(0,len(hubs)):
+        c2 = hubs[j]
+        dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+
+
+map_C2H = np.zeros((len(counties),len(hubs)))
+
+# convert look-up table to distance matrix
 for i in range(0,len(counties)):
-    c1 = counties[i]
-    for j in range(0,len(counties)):
-        c2 = counties[j]
-        if i != j:
-            a = df_dist.loc[df_dist['county1']==c1]
-            b = a.loc[df_dist['county2']==c2]
-            dist_map[i,j] = (b['distance_m'].values)/1000
-        else:
-            dist_map[i,j] = 0
-            
+    h = int(county_hubs[i]) - 1
+    map_C2H[i,h] = 1    
 
 #####################################################################
 ##########           FUNCTION DEFINITION     ########################
@@ -53,26 +89,32 @@ for i in range(0,len(counties)):
 ha_to_acre = 2.47105 # Hectares to Acres
 lb_to_kg= 0.453515 # pounds to kilograms
 kg_to_L_Ethanol = 1.273723
+
+
+# NOTE: MAKE SURE OF CONVERSIONS BELOW -- VALUES ABOVE NOW APPEAR ALL IN ACRES
     
     
 # simulation model (function to be evaluated by MOEA)
 def simulate(
-        vars, # cultivation hectares per county, mass flows to refineries
+        vars, # cultivation hectares per county, hub-to-hub biomass flows
         LC = land_costs, # land costs per county
         C_Y = bu_per_acre_C_yield, # corn yield per acre
         LL = land_limits, # land limits
-        DM = dist_map, # distance mapping
+        DM = dist_map, # hub to hub distances
+        C2H_map = map_C2H, # binary matrix mapping counties (rows) to hubs (columns)
+        C2H = dist_C2H # county to hub distances
         ):
     
-    # Empty variables 
+    # Empty parameters 
     CS_farm_kg = 0 # corn stover production in kg
     CS_cultivation_capex = 0 
     CS_cultivation_opex = 0
     CS_travel_opex = 0
-    CS_flow_matrix = np.zeros((len(counties),len(counties)))
+    CS_flow_matrix = np.zeros((len(hubs),len(hubs)))
+    CS_C2H_prod = np.zeros((len(counties),len(hubs)))
     CS_flow = 0
     CS_refinery_kg = 0
-    CS_ethanol = np.zeros((len(counties),1))
+    CS_ethanol = np.zeros((len(hubs),1))
     CS_refinery_opex = 0
     CS_refinery_capex = 0
     
@@ -95,36 +137,45 @@ def simulate(
         harvesting = 38.31*ha_to_acre # $ per ha
         CS_cultivation_opex += vars[i]*(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting) #herbicide in per ha??
         
-        ################################
-        # Flow to refinery
-        for j in range(0,len(counties)):
-            
-            # County to county mass transfer (kg of CS) (from county 'i' to county 'j')
-            CS_flow_matrix[i,j] += vars[(i+1)*len(counties) + j]
-        
-            # Travel costs in bale-miles
-            CS_travel_opex += DM[i,j]*CS_flow_matrix[i,j]*(lb_to_kg)*(1/1500)*0.50 
-        
-        # Transportation constraints (flow from county 'i' must be <= mass produced)
-        CS_flow = sum(CS_flow_matrix[i,:])
-        Constraints.append(CS_flow - CS_farm_kg)
+        # Automatic flow to pre-processing hub
+        CS_C2H_prod[i,:] = C2H_map[i,:]*vars[i]
+        CS_cultivation_opex += vars[i]*(lb_to_kg)*(1/1500)*0.50*C2H[i]
         
         # Cultivation constraints (land limits)
         Constraints.append(vars[i] - LL[i])  
         
         
     ################################
-    # Refinery
-    for j in range(0,len(counties)):
+    # Flow to refinery
+    for j in range(0,len(hubs)):
+        for k in range(0,len(hubs)):
         
-        # Find total mass sent to refinery in county 'j'
+            # Mass transfer (kg of CS) from hub 'j' to hub 'k'
+            CS_flow_matrix[j,k] += vars[i + 1 + j*len(hubs) + k]
+        
+            # Travel costs in bale-miles
+            CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
+    
+        # Hubs collect biomass from counties
+        CS_hub_kg = sum(CS_C2H_prod[:,j])
+    
+        # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
+        CS_flow = sum(CS_flow_matrix[j,:])
+        Constraints.append(CS_flow - CS_hub_kg)
+        
+        
+    ################################
+    # Refinery
+    for j in range(0,len(hubs)):
+        
+        # Find total mass received at hub 'j'
         CS_refinery_kg = sum(CS_flow_matrix[:,j])
         
-        # Ethanol produced at refinery in county 'j'
+        # Ethanol produced at refinery at hub 'j'
         CS_ethanol[j] = CS_processing.sim(CS_refinery_kg)
     
-    # Refinery opex
-    #ADD THIS        
+    # Refinery opex      
+    # ADD THIS
         
         # Refinery capex
         if CS_refinery_kg > 0:
@@ -132,8 +183,8 @@ def simulate(
             CS_refinery_capex+= 400000000*(scale)**.6
     
     # Sets ethanol production quota (L)
-    Constraints.append(19000-sum(CS_ethanol))
-    Constraints.append(sum(CS_ethanol) - 21000)
+    Constraints.append(11900000-sum(CS_ethanol))
+    Constraints.append(sum(CS_ethanol) - 12100000)
     Constraints = list(Constraints)
     
     # Returns list of objectives, Constraints
@@ -150,8 +201,8 @@ def simulate(
 UB = 10000000
 
 # Number of variables, constraints, objectives
-num_variables = len(counties) * len(counties) + len(counties)
-num_constraints = 2*len(counties)+2
+num_variables = len(counties) + len(hubs) * len(hubs)
+num_constraints = len(counties) + len(hubs) + 2
 num_objs = 2
 
 problem = Problem(num_variables,num_objs,num_constraints)
@@ -165,7 +216,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(10000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
@@ -179,6 +230,26 @@ print(mins)
 
 # limit evalutaion to 'feasible' solutions
 feasible_solutions = [s for s in algorithm.result if s.feasible]
+
+D = np.zeros((len(feasible_solutions),num_variables))
+O = np.zeros((len(feasible_solutions),num_objs))
+
+for s in feasible_solutions:
+    
+    idx = feasible_solutions.index(s)
+    # ax.scatter(s.objectives[0]/1000,s.objectives[1],s.objectives[2]*-1, c = 'red',alpha=0.5)
+
+    #record solution information
+    for i in range(0,num_variables):
+        D[idx,i] = s.variables[i]
+    for j in range(0,num_objs):
+        O[idx,j] = s.objectives[j]
+
+df_D = pd.DataFrame(D)
+df_D.to_csv('Decision_Variables.csv')
+
+df_O = pd.DataFrame(O)
+df_O.to_csv('Objective_Functions.csv')
 
 # obj1 = []
 # obj2 = []
