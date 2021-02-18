@@ -18,7 +18,7 @@ start = time.time()
 #####################################################################
 
 # import county level data
-df_geo = pd.read_excel('geo.xlsx',sheet_name='counties',header=0)
+df_geo = pd.read_excel('geo.xlsx',sheet_name='counties',header=0,engine='openpyxl')
 fips = df_geo['fips'].values
 counties = df_geo['name']
 land_costs = df_geo.loc[:,'land_cost'].values # $ per ha
@@ -28,7 +28,7 @@ land_limits = df_geo['land_limit'].values # ha
 bu_per_acre_C_yield = df_geo['C_yield'].values 
 
 # import distance look-up table
-df_dist = pd.read_excel('geo.xlsx',sheet_name='distance_lookup',header=0)
+df_dist = pd.read_excel('geo.xlsx',sheet_name='distance_lookup',header=0,engine='openpyxl')
 dist_map = np.zeros((len(counties),len(counties)))
 
 # convert look-up table to matrix
