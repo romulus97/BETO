@@ -74,12 +74,6 @@ if num_counties > 0:
 else:
     reduced_counties = counties
     
-land_costs = df_geo.loc[:,'land_cost_dpa'].values # $ per acre
-land_limits = df_geo['land_limits_acre'].values # county ag production area in acres
-
-# Corn Stover
-bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
-
 
     
 ################################
@@ -105,7 +99,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 1
+num_refineries = 2
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -287,7 +281,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(500000)
+algorithm.run(100000)
 
 stop = time.time()
 elapsed = (stop - start)/60
