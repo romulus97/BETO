@@ -23,7 +23,7 @@ df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine=('openpyxl'))
 counties = list(df_geo['co_state'])
 
 #specify grouping
-groups = 80
+groups = 20
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
