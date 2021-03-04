@@ -281,7 +281,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(500000)
 
 stop = time.time()
 elapsed = (stop - start)/60
