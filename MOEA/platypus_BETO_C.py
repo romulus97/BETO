@@ -245,7 +245,7 @@ def simulate(
         CS_ethanol[k] = CS_processing.sim(CS_refinery_kg)
         
         # Refinery capex
-        if CS_refinery_kg > 0:
+        if CS_refinery_kg > 5:
             scale = CS_refinery_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
             CS_refinery_capex+= 400000000*(scale)**.6
     
@@ -315,6 +315,34 @@ df_D.to_csv('Decision_Variables_all.csv')
 df_O = pd.DataFrame(O)
 df_O.to_csv('Objective_Functions_all.csv')
 
+
+# find constraints that are violated
+import constraint_test
+
+df = pd.read_csv('Decision_Variables_all.csv',header=0,index_col=0)
+
+LC = reduced_land_costs # land costs per county
+C_Y = reduced_C_yield # corn yield per acre
+LL = reduced_land_limits # land limits
+DM = dist_map # hub to hub distances
+C2H_map = map_C2H # binary matrix mapping counties (rows) to hubs (columns)
+C2H = dist_C2H # county to hub distances
+locations = locations #possible location of biorefineries,
+hubs = hubs
+Q = quota
+
+violations = {}
+
+for i in range(0,len(df)):
+    DV = df.iloc[0,:] # take first solution
+    [CS_refinery_capex, CS_travel_opex], Constraints = constraint_test.test(DV, LC, C_Y, LL, DM, C2H_map, C2H, locations, hubs, Q)
+    C = []
+    for j in range(0,len(Constraints)):
+            if Constraints[j] > 0:
+                C.append(j)
+    violations[i] = C
+        
+        
 
 # #limit evalutaion to 'feasible' solutions
 feasible_solutions = [s for s in algorithm.result if s.feasible]

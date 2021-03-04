@@ -1,4 +1,4 @@
-z"""
+"""
 Created on Fri Jul  3 16:20:20 2020
 
 @author: jkern
@@ -161,13 +161,15 @@ def simulate(
             CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
 
     for j in range(0,len(hubs)):
-e        
+        
         # Hubs collect biomass from counties
         CS_hub_kg = sum(CS_C2H_prod[:,j])
     
         # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
         CS_flow = sum(CS_flow_matrix[j,:])
         Constraints.append(CS_flow - CS_hub_kg)
+        
+        DISTANCE VARIABLES
         
         
     ################################
@@ -184,6 +186,7 @@ e
     # ADD THIS
         
         # Refinery capex
+        ADJUST TO MAKE NON-ZERO
         if CS_refinery_kg > 0:
             scale = CS_refinery_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
             CS_refinery_capex+= 400000000*(scale)**.6
