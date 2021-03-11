@@ -16,12 +16,12 @@ def QD (groups,reduced_counties,locations):
     #####################################################################
     
     # import county level data
-    df_geo = pd.read_excel('geodata_total.xlsx',header=0)
+    df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
     counties = list(df_geo['co_state'])
     
     #county-to-hub data
     filename = 'C2H_' + str(groups) + '.xlsx'
-    df_C2H = pd.read_excel(filename,header=0)
+    df_C2H = pd.read_excel(filename,header=0, engine='openpyxl')
     c = list(df_C2H['co_state'])
     
     #eliminate and counties that don't appear in both lists
@@ -72,7 +72,7 @@ def QD (groups,reduced_counties,locations):
     
     #hub-to-hub data
     filename = 'H2H_' + str(groups) + '.xlsx'
-    df_H2H = pd.read_excel(filename,header=0)
+    df_H2H = pd.read_excel(filename,header=0, engine='openpyxl')
     hubs = list(df_H2H['OriginID'].unique())
     
            
