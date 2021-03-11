@@ -57,7 +57,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 20  
+num_counties = 0
 
 reduced_counties = []
 reduced_land_costs = []
@@ -66,7 +66,7 @@ reduced_C_yield = []
 
 if num_counties > 0:
     for i in range(0,num_counties):
-        s = randint(0,len(counties))
+        s = randint(0,len(counties)-1)
         if s in reduced_counties:
             pass
         else:
@@ -99,7 +99,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 2
+num_refineries = 0
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -281,7 +281,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(1000000)
 
 stop = time.time()
 elapsed = (stop - start)/60
