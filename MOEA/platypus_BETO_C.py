@@ -66,7 +66,7 @@ reduced_C_yield = []
 
 if num_counties > 0:
     for i in range(0,num_counties):  
-        s = randint(0,len(counties)) #BUG: needs to be len(counties) - 1 ? throws out of index error
+        s = randint(0,len(counties) - 1)
         if s in reduced_counties:
             pass
         else:
