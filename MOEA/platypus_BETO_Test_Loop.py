@@ -16,7 +16,7 @@ group = 20
 counties = 20 
 hubs = 1
 
-for i in range(0,25):
+for i in range(0,1):
     
     platypus_BETO_def.main()
     

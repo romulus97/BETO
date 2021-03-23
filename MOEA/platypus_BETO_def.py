@@ -59,7 +59,7 @@ def main():
     
     # Limit # of counties under consideration
     # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-    num_counties = 20
+    num_counties = 100
     
     reduced_counties = []
     reduced_land_costs = []
@@ -101,7 +101,7 @@ def main():
     
     # Pre-define location of refineries
     # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-    num_refineries = 1
+    num_refineries = 2
     
     #hub-to-hub data
     filename = 'H2H_' + str(groups) + '.xlsx'
@@ -369,6 +369,7 @@ def main():
     df_O = pd.DataFrame(O)
     df_O.to_csv('Objective_Functions.csv')
     
+
 # obj1 = []
 # obj2 = []
 

@@ -9,7 +9,7 @@ from random import randint
 import pandas as pd
 import numpy as np
 import time
-import corn_stover_cultivation as CS_cultivation
+import corn_stover_cultivation_V as CS_cultivation
 import corn_stover_processing as CS_processing
 
 start = time.time()
@@ -23,7 +23,7 @@ df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
-groups = 50
+groups = 20
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
@@ -57,7 +57,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 0
+num_counties = 20
 
 reduced_counties = []
 reduced_land_costs = []
@@ -99,7 +99,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 0
+num_refineries = 1
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -191,14 +191,14 @@ def simulate(
     ##############################
     # Cultivation and Harvesting
         
-    for i in range(0,len(LC)):
-        
-        # Per ha values (need to expand)
-        (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y[i])
+    # Per ha values (need to expand)
+    (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y)
+ 
+    # Capital costs (need to expand)
+    CS_cultivation_capex = CS_cultivation_capex + np.dot(np.asarray(vars), np.asarray(LC))
     
-        # Capital costs (need to expand)
-        CS_cultivation_capex += vars[i]*LC[i]
-        
+    for i in range(0,len(LC)):
+                          
         # Operating costs (need to expand)
         harvesting = 38.31*ha_to_acre # $ per ha
         CS_cultivation_opex += vars[i]*(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting) #herbicide in per ha??
@@ -281,7 +281,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(500000)
+algorithm.run(10000)
 
 stop = time.time()
 elapsed = (stop - start)/60
