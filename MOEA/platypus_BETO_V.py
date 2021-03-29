@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import time
 import corn_stover_cultivation_V as CS_cultivation
-import corn_stover_processing as CS_processing
+import corn_stover_processing_V as CS_processing
 
 start = time.time()
 
@@ -19,7 +19,7 @@ start = time.time()
 #####################################################################
 
 # import county level data
-df_geo = pd.read_excel('geodata_total.xlsx',header=0)
+df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
@@ -27,7 +27,7 @@ groups = 20
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
-df_C2H = pd.read_excel(filename,header=0)
+df_C2H = pd.read_excel(filename,header=0, engine='openpyxl')
 c = list(df_C2H['co_state'])
 
 #eliminate and counties that don't appear in both lists
@@ -57,7 +57,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 0
+num_counties = 20
 
 reduced_counties = []
 reduced_land_costs = []
@@ -99,11 +99,11 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 0
+num_refineries = 1
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
-df_H2H = pd.read_excel(filename,header=0)
+df_H2H = pd.read_excel(filename,header=0, engine='openpyxl')
 hubs = list(df_H2H['OriginID'].unique())
 
 locations = []
@@ -157,7 +157,6 @@ kg_to_L_Ethanol = 1.273723
 
 # NOTE: MAKE SURE OF CONVERSIONS BELOW -- VALUES ABOVE NOW APPEAR ALL IN ACRES
     
-    
 # simulation model (function to be evaluated by MOEA)
 def simulate(
     
@@ -205,60 +204,75 @@ def simulate(
     CS_cultivation_opex = np.dot(v[0:len(LC)],(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting)) #herbicide in per ha??
     
     # Automatic flow to pre-processing hub
-    CS_C2H_prod = C2H_map*CS_per_ha*v[0:len(LC)]
+    CS_C2H_prod = C2H_map.dot(CS_per_ha.dot(v[0:len(LC)]))
 
     CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
     
-    # Cultivation constraints (land limits)
-    for i in range(0,len(LC)):
-        Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
+    # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP 
+    # for i in range(0,len(LC)):
+    #     Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
         
     ################################
         
-    # Flow to refinery
+    # ref = (len(hubs) - 1)*len(locations) + (len(locations) - 1) + 1
+    
+    # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
+    # CS_flow_matrix = vars[]
+    # flm = np.array(CS_flow_matrix)
+    # dm = np.array(DM)
+    # # Travel costs in bale-miles
+    # CS_travel_opex = dm.dot(flm)*(lb_to_kg)*(1/1500)*0.50 #make sure to sum(CS_travel_opex) in line 279
+
+    #Flow to refinery
     for j in range(0,len(hubs)):
         
         for k in range(0,len(locations)):
         
             # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-            CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[i + 1 + j*len(locations) + k]
+            CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[len(LC) + j*len(locations) + k] 
             
             # Travel costs in bale-miles
             CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
 
-    for j in range(0,len(hubs)):
-        
-        # Hubs collect biomass from counties
-        CS_hub_kg = sum(CS_C2H_prod[:,j])
+    #for j in range(0,len(hubs)):
+    P = np.array(CS_C2H_prod)
+    F = np.array(CS_flow_matrix)
     
-        # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
-        CS_flow = sum(CS_flow_matrix[j,:])
-        Constraints.append(CS_flow - CS_hub_kg - 5) #allow some slack in DVs
-
-        
+    # Hubs collect biomass from counties
+    CS_hub_kg = np.sum(P, axis=0)
+    
+    # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
+    CS_flow = np.sum(F, axis=1)
+    flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs
+    
+    for j in range(0,len(hubs)):
+        Constraints.append(flow_constraints[j]) 
+           
     ###############################
     # Refinery
-    for k in range(0,len(locations)):
+   
+    #for k in range(0,len(locations)):
           
-        # Find total mass received at hub 'l'
-        CS_refinery_kg = sum(CS_flow_matrix[:,k])
-        
-        # Ethanol produced at refinery at hub 'l'
-        CS_ethanol[k] = CS_processing.sim(CS_refinery_kg)
-        
+    # Find total mass received at hub 'l'
+    CS_refinery_kg = np.sum(F, axis=0)
+            
+    # Ethanol produced at refinery at hub 'l'
+    CS_ethanol = CS_processing.sim(CS_refinery_kg)
+    
+    #for k in range(0,len(locations)):
         # Refinery capex
-        if CS_refinery_kg > 5:
-            scale = CS_refinery_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
-            CS_refinery_capex+= 400000000*(scale)**.6
+        #if CS_refinery_kg[k] > 5:   #skip or remove
+    scale = CS_refinery_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
+    CS_refinery_capex = 400000000*(scale)**.6
     
     # Sets ethanol production quota (L)
-    Constraints.append(Q*0.95-sum(CS_ethanol)[0])
-    Constraints.append(sum(CS_ethanol)[0] - Q*1.05)
-
+    Constraints.append(Q - np.sum(CS_ethanol))
+    #Constraints.append(sum(CS_ethanol)[0] - Q*1.05) #remove upper contraint 
+    
     Constraints = list(Constraints)
     
     # Returns list of objectives, Constraints
-    return [CS_refinery_capex, CS_travel_opex], Constraints
+    return [sum(CS_refinery_capex), CS_travel_opex], Constraints
 
 
 #####################################################################
@@ -268,10 +282,13 @@ def simulate(
 # Number of variables, constraints, objectives
 g = len(reduced_land_costs)
 num_variables = g + len(hubs) * len(locations)
-num_constraints = g + len(hubs) + 2
+num_constraints = len(hubs) + 1 #+ g   #must match to contraints
 num_objs = 2
 
 problem = Problem(num_variables,num_objs,num_constraints)
+#use for loop problem.types[i] = LL + 5 
+for i in range(0, len(reduced_land_costs)):
+  problem.types[i] = (reduced_land_limits[i] + 5)  
 problem.types[0:g+1] = Real(0,max(reduced_land_limits))
 problem.types[g+1:] = Real(0,UB )
 problem.constraints[:] = "<=0"
@@ -283,7 +300,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(1000)
+algorithm.run(100000)
 
 stop = time.time()
 elapsed = (stop - start)/60
