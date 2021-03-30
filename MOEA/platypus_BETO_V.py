@@ -5,6 +5,7 @@ Created on Fri Jul  3 16:20:20 2020
 """
 
 from platypus import NSGAII, Problem, Real 
+import random
 from random import randint
 import pandas as pd
 import numpy as np
@@ -110,7 +111,7 @@ locations = []
 
 if num_refineries > 0:
     for i in range(0,num_refineries):
-        s = randint(1,len(hubs))
+        s = random.choice(hubs) #randint(1,len(hubs))
         if s in locations:
             pass
         else:
@@ -286,10 +287,8 @@ num_constraints = len(hubs) + 1 #+ g   #must match to contraints
 num_objs = 2
 
 problem = Problem(num_variables,num_objs,num_constraints)
-#use for loop problem.types[i] = LL + 5 
 for i in range(0, len(reduced_land_costs)):
-  problem.types[i] = Real(0,reduced_land_limits[i])  
-# problem.types[0:g+1] = Real(0,max(reduced_land_limits))
+    problem.types[i] = Real(0,reduced_land_limits[i])
 problem.types[g+1:] = Real(0,UB)
 problem.constraints[:] = "<=0"
 

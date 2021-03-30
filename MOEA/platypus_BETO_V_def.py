@@ -6,6 +6,7 @@ Created on Wed Mar 24 09:52:17 2021
 """
 
 from platypus import NSGAII, Problem, Real 
+import random
 from random import randint
 import pandas as pd
 import numpy as np
@@ -112,7 +113,7 @@ def main(G, nc, nr, evl):
     
     if num_refineries > 0:
         for i in range(0,num_refineries):
-            s = randint(1,len(hubs))
+            s = random.choice(hubs)
             if s in locations:
                 pass
             else:
@@ -212,8 +213,7 @@ def main(G, nc, nr, evl):
         CS_C2H_prod = C2H_map.dot(CS_per_ha.dot(v[0:len(LC)]))
     
         CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
-        
-        # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP
+                    
         for i in range(0,len(LC)):
             Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
             
@@ -292,7 +292,6 @@ def main(G, nc, nr, evl):
     num_objs = 2
     
     problem = Problem(num_variables,num_objs,num_constraints)
-    #use for loop problem.type[i] = LL + 5 
     problem.types[0:g+1] = Real(0,max(reduced_land_limits))
     problem.types[g+1:] = Real(0,UB )
     problem.constraints[:] = "<=0"
