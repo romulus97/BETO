@@ -288,9 +288,9 @@ num_objs = 2
 problem = Problem(num_variables,num_objs,num_constraints)
 #use for loop problem.types[i] = LL + 5 
 for i in range(0, len(reduced_land_costs)):
-  problem.types[i] = (reduced_land_limits[i] + 5)  
-problem.types[0:g+1] = Real(0,max(reduced_land_limits))
-problem.types[g+1:] = Real(0,UB )
+  problem.types[i] = Real(0,reduced_land_limits[i])  
+# problem.types[0:g+1] = Real(0,max(reduced_land_limits))
+problem.types[g+1:] = Real(0,UB)
 problem.constraints[:] = "<=0"
 
 #What function?
