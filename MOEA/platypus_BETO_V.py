@@ -100,7 +100,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 1
+num_refineries = 2
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -287,9 +287,9 @@ num_constraints = len(hubs) + 1 #+ g   #must match to contraints
 num_objs = 2
 
 problem = Problem(num_variables,num_objs,num_constraints)
-for i in range(0, len(reduced_land_costs)):
-    problem.types[i] = Real(0,reduced_land_limits[i])
-problem.types[g+1:] = Real(0,UB)
+for i in range(0,len(reduced_land_costs)):
+    problem.types[i] = Real(0,reduced_land_limits[i]+1)
+problem.types[g:] = Real(0,UB+1)
 problem.constraints[:] = "<=0"
 
 #What function?
@@ -299,7 +299,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
