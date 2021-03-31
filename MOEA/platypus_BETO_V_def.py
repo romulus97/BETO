@@ -214,9 +214,6 @@ def main(G, nc, nr, evl):
     
         CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
                     
-        for i in range(0,len(LC)):
-            Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
-            
         ################################
             
         # ref = (len(hubs) - 1)*len(locations) + (len(locations) - 1)
@@ -288,12 +285,13 @@ def main(G, nc, nr, evl):
     # Number of variables, constraints, objectives
     g = len(reduced_land_costs)
     num_variables = g + len(hubs) * len(locations)
-    num_constraints = g + len(hubs) + 1      #must match to contraints
+    num_constraints = len(hubs) + 1      #must match to contraints
     num_objs = 2
     
     problem = Problem(num_variables,num_objs,num_constraints)
-    problem.types[0:g+1] = Real(0,max(reduced_land_limits))
-    problem.types[g+1:] = Real(0,UB )
+    for i in range(0,len(reduced_land_costs)):
+        problem.types[i] = Real(0,reduced_land_limits[i]+1)
+    problem.types[g:] = Real(0,UB+1)
     problem.constraints[:] = "<=0"
     
     #What function?

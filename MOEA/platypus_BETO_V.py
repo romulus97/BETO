@@ -24,7 +24,7 @@ df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
-groups = 20
+groups = 50
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
@@ -127,15 +127,18 @@ dist_map = np.zeros((len(hubs),len(locations)))
 # convert look-up table to distance matrix
 for i in range(0,len(hubs)):
     c1 = hubs[i]
-    for j in range(0,len(locations)):
-        c2 = hubs[locations[j]-1]
-        dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+    for j in locations: 
+        c2 = j
+        dist_map[i,locations.index(j)] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+    # for j in range(0, len(locations)):
+    #     c2 = hubs[locations[j]-1]
+    #     dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
 
-map_C2H = np.zeros((len(reduced_counties),len(hubs)))
+map_C2H = np.zeros((len(reduced_counties), len(hubs)))
 
-# convert look-up table to distance matrix
+# convert look-up table to distance matrix #when 50 is indexed 49 is not valid because of missing hubs
 for i in range(0,len(reduced_counties)):
-    h = int(county_hubs[i]) - 1
+    h = int(county_hubs[i]) - 1  #hubs.index(int(county_hubs[i]))
     map_C2H[i,h] = 1    
 
 
@@ -215,30 +218,29 @@ def simulate(
         
     ################################
         
-    # ref = (len(hubs) - 1)*len(locations) + (len(locations) - 1) + 1
-    
+    ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
+   
     # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-    # CS_flow_matrix = vars[]
-    # flm = np.array(CS_flow_matrix)
-    # dm = np.array(DM)
-    # # Travel costs in bale-miles
-    # CS_travel_opex = dm.dot(flm)*(lb_to_kg)*(1/1500)*0.50 #make sure to sum(CS_travel_opex) in line 279
-
-    #Flow to refinery
-    for j in range(0,len(hubs)):
+    CS_flow_matrix = v[len(LC):ref].reshape((len(hubs),len(locations)))
+    
+    # Travel costs in bale-miles
+    CS_travel_opex = np.sum(DM*CS_flow_matrix*((lb_to_kg)*(1/1500)*0.50)) 
+    
+    # #Flow to refinery
+    # for j in range(0,len(hubs)):
         
-        for k in range(0,len(locations)):
+    #     for k in range(0,len(locations)):
         
-            # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-            CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[len(LC) + j*len(locations) + k] 
+    #         # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
+    #         CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[len(LC) + j*len(locations) + k] 
             
-            # Travel costs in bale-miles
-            CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
+    #         # Travel costs in bale-miles
+    #         CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
 
     #for j in range(0,len(hubs)):
     P = np.array(CS_C2H_prod)
     F = np.array(CS_flow_matrix)
-    
+   
     # Hubs collect biomass from counties
     CS_hub_kg = np.sum(P, axis=0)
     
@@ -275,7 +277,6 @@ def simulate(
     # Returns list of objectives, Constraints
     return [sum(CS_refinery_capex), CS_travel_opex], Constraints
 
-
 #####################################################################
 ##########           MOEA EXECUTION          ########################
 #####################################################################
@@ -299,7 +300,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(1000)
+algorithm.run(100000)
 
 stop = time.time()
 elapsed = (stop - start)/60

@@ -19,7 +19,7 @@ start = time.time()
 #####################################################################
 
 # import county level data
-df_geo = pd.read_excel('geodata_total.xlsx',header=0)
+df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
@@ -27,7 +27,7 @@ groups = 20
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
-df_C2H = pd.read_excel(filename,header=0)
+df_C2H = pd.read_excel(filename,header=0, engine='openpyxl')
 c = list(df_C2H['co_state'])
 
 #eliminate and counties that don't appear in both lists
@@ -57,7 +57,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 0
+num_counties = 10
 
 reduced_counties = []
 reduced_land_costs = []
@@ -99,11 +99,11 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 0
+num_refineries = 2
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
-df_H2H = pd.read_excel(filename,header=0)
+df_H2H = pd.read_excel(filename,header=0, engine='openpyxl')
 hubs = list(df_H2H['OriginID'].unique())
 
 locations = []
@@ -281,7 +281,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(1000000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60

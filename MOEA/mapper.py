@@ -109,7 +109,7 @@ plt.savefig('subset.tiff',dpi=300)
 
 
 #objective function
-df_O = pd.read_csv('Objective_Functions_all_2000_1.csv',header=0,index_col=0)
+df_O = pd.read_csv('Objective_Functions_V2_5mil_2000_1.csv',header=0,index_col=0)
 df_O.columns = ['ref_capex','trans_opex']
 
 r = []
@@ -149,7 +149,7 @@ plt.savefig('pareto.tiff',dpi = 330)
     
     
 #decision variables
-df_D = pd.read_csv('Decision_Variables_all_2000_1.csv',header=0,index_col=0)
+df_D = pd.read_csv('Decision_Variables_V2_5mil_2000_1.csv',header=0,index_col=0)
 
 
 #minimum capex
