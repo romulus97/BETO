@@ -24,7 +24,7 @@ df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
-groups = 50
+groups = 80
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
@@ -58,7 +58,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 20
+num_counties = 0
 
 reduced_counties = []
 reduced_land_costs = []
@@ -100,7 +100,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 2
+num_refineries = 0
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -138,14 +138,14 @@ map_C2H = np.zeros((len(reduced_counties), len(hubs)))
 
 # convert look-up table to distance matrix #when 50 is indexed 49 is not valid because of missing hubs
 for i in range(0,len(reduced_counties)):
-    h = int(county_hubs[i]) - 1  #hubs.index(int(county_hubs[i]))
+    h = hubs.index(int(county_hubs[i])) # int(county_hubs[i]) - 1
     map_C2H[i,h] = 1    
 
 
 #########################################################
 # Identify quota as 50% of maximum theoretical production
-import determine_quota
-quota, UB = determine_quota.QD(groups,reduced_counties,locations)
+import determine_quota_V
+quota, UB = determine_quota_V.QD(groups,reduced_counties,locations)
 quota = quota[0]
 
     
@@ -300,7 +300,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
