@@ -194,22 +194,19 @@ for i in range(0,len(cb_counties)):
 cb_counties['color'] = C
 cb_counties.plot(ax=ax,color=list(cb_counties['color']),alpha=1,edgecolor='none',linewidth=0.8)
 
-# ax.set_box_aspect(1)
-# ax.set_xlim(-750000,2000000)
-# ax.set_ylim([-2000000,500000])
-# plt.axis('off')
+# STOPPED HERE
 
 #plot refineries
-d_sample = list(df_D.iloc[1,len(df_subset):])
-dvs = int(np.sqrt(len(d_sample)))
-mx = max(d_sample)
-for i in range(0,len(d_sample)):
-    d_sample[i] = (d_sample[i]/mx)*3
+# d_sample = list(df_D.iloc[1,len(df_subset):])
+# dvs = int(np.sqrt(len(d_sample)))
+# mx = max(d_sample)
+# for i in range(0,len(d_sample)):
+#     d_sample[i] = (d_sample[i]/mx)*3
     
-geo_df['marker_size'] = d_sample
+# geo_df['marker_size'] = d_sample
 
-for i in range(1,len(geo_df)):
-    geo_df[geo_df['hub']==i].plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
+# for i in range(1,len(geo_df)):
+#     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
 
 
 ax.set_box_aspect(1)
