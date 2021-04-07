@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Mar 30 12:57:35 2021
-
 @author: jkern
 """
 # -*- coding: utf-8 -*-
 """
 Spyder Editor
-
 This is a temporary script file.
 """
 
@@ -18,8 +16,9 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
 
-
+groups = 20
 df = pd.read_csv('GPS_20_Hubs.csv',header=0)
+
 crs = {'init':'epsg:4326'}
 # crs = {"init": "epsg:2163"}
 geometry = [Point(xy) for xy in zip(df['Longitude'],df['Latitude'])]
@@ -38,9 +37,11 @@ county_map = county_map.to_crs(epsg=2163)
 county_map2 = gpd.read_file('shapefiles/USA_counties.shp')
 county_map2 = county_map2.to_crs(epsg=2163)
 
+cb_counties = gpd.clip(county_map2,county_map)
+
 fig,ax = plt.subplots()
 state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
-county_map.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
+cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 
 ax.set_box_aspect(1)
 ax.set_xlim(-750000,2000000)
@@ -62,10 +63,10 @@ plt.savefig('groups.tiff',dpi=300)
 
 fig,ax = plt.subplots()
 state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
-county_map.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
+cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
 
-for i in range(1,20):
+for i in range(1,groups):
     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
 ax.set_box_aspect(1)
@@ -80,26 +81,48 @@ plt.savefig('hubs.tiff',dpi=300)
 
 # import county level data
 df_subset = pd.read_csv('geodata_total.csv',header=0)
+counties = list(df_subset['co_state'])
+
+#county-to-hub data
+filename = 'C2H_' + str(groups) + '.csv'
+df_C2H = pd.read_csv(filename,header=0)
+c = list(df_C2H['co_state'])
+
+#eliminate and counties that don't appear in both lists
+for i in counties:
+    idx = counties.index(i)
+    if i in c:
+        pass
+    else:
+        df_subset= df_subset.drop(index=idx)
+
+df_subset = df_subset.reset_index(drop=True)
+
+
+sub_fips = list(df_subset['fips'])
+cb_counties = cb_counties.reset_index(drop=True)
+# drop any redundant lines
+FIPS = []
+for i in range(0,len(cb_counties)):
+    f = float(cb_counties.loc[i,'FIPS'])
+    if f in sub_fips:
+        pass
+    else:
+        cb_counties = cb_counties.drop(i)
+
+cb_counties = cb_counties.reset_index(drop=True)
+    
 
 fig,ax = plt.subplots()
 state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
-county_map.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
+cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
 
-for i in range(0,len(df_subset)):
-       
-    c = df_subset.loc[i,'fips']
-    
-    sample = county_map2.loc[county_map2['FIPS'] == c]
-    sample.plot(ax=ax,color='white',alpha=1,edgecolor='magenta',linewidth=0.8)
-                      
 
-for i in range(1,20):
+for i in range(1,groups):
     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
-for i in [4,8,10]:
-    geo_df[geo_df['hub']==i].plot(ax=ax,markersize=32,color='deepskyblue',marker='o',edgecolor='blue',linewidth=0.1)
-        
+      
 ax.set_box_aspect(1)
 ax.set_xlim(-750000,2000000)
 ax.set_ylim([-2000000,500000])
@@ -109,7 +132,7 @@ plt.savefig('subset.tiff',dpi=300)
 
 
 #objective function
-df_O = pd.read_csv('Objective_Functions_V2_5mil_2000_1.csv',header=0,index_col=0)
+df_O = pd.read_csv('Objective_Functions_all_2000_1.csv',header=0,index_col=0)
 df_O.columns = ['ref_capex','trans_opex']
 
 r = []
@@ -149,7 +172,7 @@ plt.savefig('pareto.tiff',dpi = 330)
     
     
 #decision variables
-df_D = pd.read_csv('Decision_Variables_V2_5mil_2000_1.csv',header=0,index_col=0)
+df_D = pd.read_csv('Decision_Variables_all_2000_1.csv',header=0,index_col=0)
 
 
 #minimum capex
@@ -157,33 +180,48 @@ d_sample = list(df_D.iloc[1,0:len(df_subset)])
 cmap = matplotlib.cm.get_cmap('cool')
 M = max(d_sample)
 
+# plt.savefig('min_ref_capex.tiff',dpi=300)
+C = []
+for i in range(0,len(cb_counties)):
+    f = float(cb_counties.loc[i,'FIPS'])
+    idx = sub_fips.index(f)
+    if not idx:
+        C.append(0)
+    else:
+        d_value = d_sample[idx]
+        sample_c = cmap(d_value/M)
+        hexa = matplotlib.colors.rgb2hex(sample_c)
+        C.append(hexa)
+        
+cb_counties['color'] = C
+
+d_sample = list(df_D.iloc[1,len(df_subset):])
+dvs = int(np.sqrt(len(d_sample)))
+refinery_flow = np.zeros((dvs,))
+for i in range(0,dvs):
+    for j in range(0,dvs):
+        f = d_sample[i*19+j]
+        refinery_flow[j] += f
+
+mx = max(refinery_flow)
+for i in range(0,dvs):
+    refinery_flow[i] = (refinery_flow[i]/mx)*16
+
+geo_df['marker_size'] = refinery_flow
 
 fig,ax = plt.subplots()
+
 state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
-county_map.plot(ax=ax,color='white',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
-group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
+cb_counties.plot(ax=ax,color='white',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
+cb_counties.plot(ax=ax,color=list(cb_counties['color']),alpha=1,edgecolor='none',linewidth=0.8)
 
-for i in range(0,len(df_subset)):
-    
-    print(i)
-    
-    d_value = d_sample[i]
-    C = cmap(d_value/M)
-    
-    c = df_subset.loc[i,'fips']
-    
-    sample = county_map2.loc[county_map2['FIPS'] == str(c)]
-    sample.plot(ax=ax,color=C,alpha=1,edgecolor='none',linewidth=0.8)
+# plot refineries
+geo_df.plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
 
-# for i in range(1,20):
-#     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
-# for i in [4,8,10]:
-#     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=32,color='none',marker='o',edgecolor='red',linewidth=1)
-        
 ax.set_box_aspect(1)
 ax.set_xlim(-750000,2000000)
 ax.set_ylim([-2000000,500000])
 plt.axis('off')
 
-plt.savefig('min_ref_capex.tiff',dpi=300)
+plt.savefig('example.tiff',dpi=300)

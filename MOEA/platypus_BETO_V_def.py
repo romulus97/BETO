@@ -129,22 +129,22 @@ def main(G, nc, nr, evl):
     # convert look-up table to distance matrix
     for i in range(0,len(hubs)):
         c1 = hubs[i]
-        for j in range(0,len(locations)):
-            c2 = hubs[locations[j]-1]
-            dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+        for j in locations: 
+            c2 = j
+            dist_map[i,locations.index(j)] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
     
     map_C2H = np.zeros((len(reduced_counties),len(hubs)))
     
     # convert look-up table to distance matrix
     for i in range(0,len(reduced_counties)):
-        h = int(county_hubs[i]) - 1
+        h = hubs.index(int(county_hubs[i]))
         map_C2H[i,h] = 1    
     
     
     #########################################################
     # Identify quota as 50% of maximum theoretical production
-    import determine_quota
-    quota, UB = determine_quota.QD(groups,reduced_counties,locations)
+    import determine_quota_V
+    quota, UB = determine_quota_V.QD(groups,reduced_counties,locations)
     quota = quota[0]
     
         
@@ -215,25 +215,14 @@ def main(G, nc, nr, evl):
         CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
                     
         ################################
-            
-        # ref = (len(hubs) - 1)*len(locations) + (len(locations) - 1)
-         
-        # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-        # F = np.sum(F, v[len(LC):ref]) 
-                
-        # # Travel costs in bale-miles
-        # CS_travel_opex = dm*F*(lb_to_kg)*(1/1500)*0.50 
-    
         #Flow to refinery
-        for j in range(0,len(hubs)):
-            
-            for k in range(0,len(locations)):
-            
-                # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-                CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[len(LC) + j*len(locations) + k] 
-                
-                # Travel costs in bale-miles
-                CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
+        ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
+   
+        # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
+        CS_flow_matrix = v[len(LC):ref].reshape((len(hubs),len(locations)))
+    
+        # Travel costs in bale-miles
+        CS_travel_opex = np.sum(DM*CS_flow_matrix*((lb_to_kg)*(1/1500)*0.50)) 
     
         #for j in range(0,len(hubs)):
         P = np.array(CS_C2H_prod)

@@ -84,9 +84,12 @@ def QD (groups,reduced_counties,locations):
     # convert look-up table to distance matrix
     for i in range(0,len(hubs)):
         c1 = hubs[i]
-        for j in range(0,len(locations)):
-            c2 = hubs[locations[j]-1]
-            dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+        for j in locations: 
+           c2 = j
+           dist_map[i,locations.index(j)] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
+        # for j in range(0,len(locations)):
+        #     c2 = hubs[locations[j]-1]
+        #     dist_map[i,j] = df_H2H.loc[(df_H2H['OriginID']==c1) & (df_H2H['DestinationID']==c2),'Total_Kilometers']
     
     map_C2H = np.zeros((len(reduced_counties),len(hubs)))
     
