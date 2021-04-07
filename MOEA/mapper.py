@@ -20,6 +20,7 @@ from shapely.geometry import Point, Polygon
 
 groups = 20
 df = pd.read_csv('GPS_20_Hubs.csv',header=0)
+
 crs = {'init':'epsg:4326'}
 # crs = {"init": "epsg:2163"}
 geometry = [Point(xy) for xy in zip(df['Longitude'],df['Latitude'])]
@@ -67,7 +68,7 @@ state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
 cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
 
-for i in range(1,20):
+for i in range(1,groups):
     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
 ax.set_box_aspect(1)
@@ -120,7 +121,7 @@ cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidt
 group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
 
 
-for i in range(1,20):
+for i in range(1,groups):
     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
       
@@ -225,4 +226,4 @@ ax.set_xlim(-750000,2000000)
 ax.set_ylim([-2000000,500000])
 plt.axis('off')
 
-plt.savefig('min_ref_capex.tiff',dpi=300)
+plt.savefig('example.tiff',dpi=300)
