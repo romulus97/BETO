@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
 
-
+groups = 20
 df = pd.read_csv('GPS_20_Hubs.csv',header=0)
 crs = {'init':'epsg:4326'}
 # crs = {"init": "epsg:2163"}
@@ -82,6 +82,24 @@ plt.savefig('hubs.tiff',dpi=300)
 
 # import county level data
 df_subset = pd.read_csv('geodata_total.csv',header=0)
+counties = list(df_subset['co_state'])
+
+#county-to-hub data
+filename = 'C2H_' + str(groups) + '.csv'
+df_C2H = pd.read_csv(filename,header=0)
+c = list(df_C2H['co_state'])
+
+#eliminate and counties that don't appear in both lists
+for i in counties:
+    idx = counties.index(i)
+    if i in c:
+        pass
+    else:
+        df_subset= df_subset.drop(index=idx)
+
+df_subset = df_subset.reset_index(drop=True)
+
+
 sub_fips = list(df_subset['fips'])
 cb_counties = cb_counties.reset_index(drop=True)
 # drop any redundant lines
@@ -101,20 +119,11 @@ state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
 cb_counties.plot(ax=ax,color='orange',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
 
-# for i in range(0,len(df_subset)):
-       
-#     c = df_subset.loc[i,'fips']
-    
-#     sample = county_map2.loc[county_map2['FIPS'] == c]
-#     sample.plot(ax=ax,color='white',alpha=1,edgecolor='magenta',linewidth=0.8)
-                      
 
 for i in range(1,20):
     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=16,color='black',marker='o',edgecolor='white',linewidth=0.1)
 
-# for i in [4,8,10]:
-#     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=32,color='deepskyblue',marker='o',edgecolor='blue',linewidth=0.1)
-        
+      
 ax.set_box_aspect(1)
 ax.set_xlim(-750000,2000000)
 ax.set_ylim([-2000000,500000])
@@ -172,12 +181,6 @@ d_sample = list(df_D.iloc[1,0:len(df_subset)])
 cmap = matplotlib.cm.get_cmap('cool')
 M = max(d_sample)
 
-
-fig,ax = plt.subplots()
-state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
-cb_counties.plot(ax=ax,color='white',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
-# group_map.plot(ax=ax,color='none',alpha=1,edgecolor='black',linewidth=0.5)
-
 # plt.savefig('min_ref_capex.tiff',dpi=300)
 C = []
 for i in range(0,len(cb_counties)):
@@ -192,21 +195,29 @@ for i in range(0,len(cb_counties)):
         C.append(hexa)
         
 cb_counties['color'] = C
+
+d_sample = list(df_D.iloc[1,len(df_subset):])
+dvs = int(np.sqrt(len(d_sample)))
+refinery_flow = np.zeros((dvs,))
+for i in range(0,dvs):
+    for j in range(0,dvs):
+        f = d_sample[i*19+j]
+        refinery_flow[j] += f
+
+mx = max(refinery_flow)
+for i in range(0,dvs):
+    refinery_flow[i] = (refinery_flow[i]/mx)*16
+
+geo_df['marker_size'] = refinery_flow
+
+fig,ax = plt.subplots()
+
+state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
+cb_counties.plot(ax=ax,color='white',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
 cb_counties.plot(ax=ax,color=list(cb_counties['color']),alpha=1,edgecolor='none',linewidth=0.8)
 
-# STOPPED HERE
-
-#plot refineries
-# d_sample = list(df_D.iloc[1,len(df_subset):])
-# dvs = int(np.sqrt(len(d_sample)))
-# mx = max(d_sample)
-# for i in range(0,len(d_sample)):
-#     d_sample[i] = (d_sample[i]/mx)*3
-    
-# geo_df['marker_size'] = d_sample
-
-# for i in range(1,len(geo_df)):
-#     geo_df[geo_df['hub']==i].plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
+# plot refineries
+geo_df.plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
 
 
 ax.set_box_aspect(1)
