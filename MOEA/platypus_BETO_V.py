@@ -215,6 +215,8 @@ def simulate(
     # for i in range(0,len(LC)):
     #     Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
         
+    LL_cons = np.subtract(np.subtract(v[0:len(LC)], LL), 5)
+    Constraints.extend(LL_cons.tolist())
     ################################
         
     ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
@@ -283,14 +285,19 @@ def simulate(
 # Number of variables, constraints, objectives
 g = len(reduced_land_costs)
 num_variables = g + len(hubs) * len(locations)
-num_constraints = len(hubs) + 1 #+ g   #must match to contraints
+num_constraints = len(hubs) + 1 + g   #must match to contraints
 num_objs = 2
 
 problem = Problem(num_variables,num_objs,num_constraints)
-for i in range(0,len(reduced_land_costs)):
-    problem.types[i] = Real(0,reduced_land_limits[i]+1)
-problem.types[g:] = Real(0,UB+1)
+problem.types[0:g+1] = Real(0,max(reduced_land_limits))
+problem.types[g+1:] = Real(0,UB )
 problem.constraints[:] = "<=0"
+
+# problem = Problem(num_variables,num_objs,num_constraints)
+# for i in range(0,len(reduced_land_costs)):
+#     problem.types[i] = Real(0,reduced_land_limits[i]+1)
+# problem.types[g:] = Real(0,UB+1)
+# problem.constraints[:] = "<=0"
 
 #What function?
 problem.function = simulate
