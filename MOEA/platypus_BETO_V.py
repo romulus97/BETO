@@ -217,6 +217,7 @@ def simulate(
         
     LL_cons = np.subtract(np.subtract(v[0:len(LC)], LL), 5)
     Constraints.extend(LL_cons.tolist())
+   
     ################################
         
     ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
@@ -249,9 +250,11 @@ def simulate(
     CS_flow = np.sum(F, axis=1) #kg
     flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs #kg
     
-    for j in range(0,len(hubs)):
-        Constraints.append(flow_constraints[j]) 
-           
+    # for j in range(0,len(hubs)):
+    #     Constraints.append(flow_constraints[j]) 
+    
+    Constraints.extend(flow_constraints.tolist())
+    
     ###############################
     # Refinery
    
