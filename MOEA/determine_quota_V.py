@@ -106,7 +106,7 @@ def QD (groups,reduced_counties,locations):
     #pre-load test decision variables
     V = []
     for i in range(0,len(reduced_counties)):
-        V.append(reduced_land_limits[i]*0.50) #50% of theoretical capacity
+        V.append(reduced_land_limits[i] * 0.50) #50% of theoretical capacity
       
     LC = reduced_land_costs # land costs per county
     C_Y = reduced_C_yield # corn yield per acre

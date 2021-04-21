@@ -57,7 +57,7 @@ bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
 
 # Limit # of counties under consideration
 # put a number > 0 and < number of counties if desired; if not, problem defaults to full list of counties
-num_counties = 10
+num_counties = 0
 
 reduced_counties = []
 reduced_land_costs = []
@@ -99,7 +99,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 2
+num_refineries = 0
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
@@ -205,7 +205,7 @@ def simulate(
         
         # Automatic flow to pre-processing hub
         CS_C2H_prod[i,:] = C2H_map[i,:]*CS_per_ha*vars[i]
-
+        
         CS_cultivation_opex += CS_per_ha*vars[i]*(lb_to_kg)*(1/1500)*0.50*C2H[i]
         
         # Cultivation constraints (land limits)

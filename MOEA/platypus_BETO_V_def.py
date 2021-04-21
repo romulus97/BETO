@@ -212,7 +212,7 @@ def main(G, nc, nr, evl):
         # Automatic flow to pre-processing hub
         CS_C2H_prod = C2H_map.dot(CS_per_ha.dot(v[0:len(LC)]))
     
-        CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
+        CS_cultivation_opex += sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
                     
         ################################
         #Flow to refinery

@@ -24,7 +24,7 @@ df_geo = pd.read_excel('geodata_total.xlsx',header=0, engine='openpyxl')
 counties = list(df_geo['co_state'])
 
 #specify grouping
-groups = 80
+groups = 20
 
 #county-to-hub data
 filename = 'C2H_' + str(groups) + '.xlsx'
@@ -47,7 +47,6 @@ land_limits = df_geo['land_limits_acre'].values # county ag production area in a
 
 # Corn Stover
 bu_per_acre_C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
-
 
 ########################################################################
 #########        PRE-PROCESSING       ##################################
@@ -147,8 +146,7 @@ for i in range(0,len(reduced_counties)):
 import determine_quota_V
 quota, UB = determine_quota_V.QD(groups,reduced_counties,locations)
 quota = quota[0]
-
-    
+ 
 #####################################################################
 ##########           FUNCTION DEFINITION     ########################
 #####################################################################
@@ -192,26 +190,27 @@ def simulate(
     Constraints = [] # constraints
     
     # Per ha values (need to expand)
-    (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y)
+    (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y) #kg/ha
 
     # Capital costs (need to expand)
-    L = np.array(LC)
+    L = np.array(LC) #$/acre
     v = np.array(vars)
     
-    CS_cultivation_capex = np.dot(v[0:len(LC)],L)
-        
+    CS_cultivation_capex += np.sum(v[0:len(LC)]*L) #  ha*$/acre
+    
     ##############################
     # Cultivation and Harvesting
 
     # Operating costs (need to expand)
     harvesting = 38.31*ha_to_acre # $ per ha
-    CS_cultivation_opex = np.dot(v[0:len(LC)],(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting)) #herbicide in per ha??
-    
+    CS_cultivation_opex += np.sum((v[0:len(LC)]*(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting))) #herbicide in per ha??
+   
+    c2h_map = np.array(C2H_map)
     # Automatic flow to pre-processing hub
-    CS_C2H_prod = C2H_map.dot(CS_per_ha.dot(v[0:len(LC)]))
-
-    CS_cultivation_opex = sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
+    CS_C2H_prod = c2h_map * np.transpose(np.array([(CS_per_ha * v[0:len(LC)]),] * len(hubs))) #kg = kg*ha/ha
     
+    CS_cultivation_opex += np.sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
+   
     # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP 
     # for i in range(0,len(LC)):
     #     Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
@@ -221,10 +220,10 @@ def simulate(
     ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
    
     # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-    CS_flow_matrix = v[len(LC):ref].reshape((len(hubs),len(locations)))
+    CS_flow_matrix = v[len(LC):ref].reshape((len(hubs),len(locations))) #kg
     
     # Travel costs in bale-miles
-    CS_travel_opex = np.sum(DM*CS_flow_matrix*((lb_to_kg)*(1/1500)*0.50)) 
+    CS_travel_opex = np.sum(DM*CS_flow_matrix*((lb_to_kg)*(1/1500)*0.50)) # km*kg*
     
     # #Flow to refinery
     # for j in range(0,len(hubs)):
@@ -242,11 +241,11 @@ def simulate(
     F = np.array(CS_flow_matrix)
    
     # Hubs collect biomass from counties
-    CS_hub_kg = np.sum(P, axis=0)
+    CS_hub_kg = np.sum(P, axis=0) #kg
     
     # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
-    CS_flow = np.sum(F, axis=1)
-    flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs
+    CS_flow = np.sum(F, axis=1) #kg
+    flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs #kg
     
     for j in range(0,len(hubs)):
         Constraints.append(flow_constraints[j]) 
@@ -257,10 +256,10 @@ def simulate(
     #for k in range(0,len(locations)):
           
     # Find total mass received at hub 'l'
-    CS_refinery_kg = np.sum(F, axis=0)
+    CS_refinery_kg = np.sum(F, axis=0) #kg
             
     # Ethanol produced at refinery at hub 'l'
-    CS_ethanol = CS_processing.sim(CS_refinery_kg)
+    CS_ethanol = CS_processing.sim(CS_refinery_kg) #L
     
     #for k in range(0,len(locations)):
         # Refinery capex
@@ -269,13 +268,13 @@ def simulate(
     CS_refinery_capex = 400000000*(scale)**.6
     
     # Sets ethanol production quota (L)
-    Constraints.append(Q - np.sum(CS_ethanol))
+    Constraints.append(Q - np.sum(CS_ethanol)) #L
     #Constraints.append(sum(CS_ethanol)[0] - Q*1.05) #remove upper contraint 
     
     Constraints = list(Constraints)
     
     # Returns list of objectives, Constraints
-    return [sum(CS_refinery_capex), CS_travel_opex], Constraints
+    return [np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
 #####################################################################
 ##########           MOEA EXECUTION          ########################
@@ -300,7 +299,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(1000)
+algorithm.run(100000)
 
 stop = time.time()
 elapsed = (stop - start)/60
