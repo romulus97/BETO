@@ -132,7 +132,7 @@ plt.savefig('subset.tiff',dpi=300)
 
 
 #objective function
-df_O = pd.read_csv('Objective_Functions_all_2000_1.csv',header=0,index_col=0)
+df_O = pd.read_csv('Objective_Functions_all.csv',header=0,index_col=0)
 df_O.columns = ['ref_capex','trans_opex']
 
 r = []
@@ -172,7 +172,7 @@ plt.savefig('pareto.tiff',dpi = 330)
     
     
 #decision variables
-df_D = pd.read_csv('Decision_Variables_all_2000_1.csv',header=0,index_col=0)
+df_D = pd.read_csv('Decision_Variables_all.csv',header=0,index_col=0)
 
 
 #minimum capex
@@ -182,14 +182,28 @@ M = max(d_sample)
 
 # plt.savefig('min_ref_capex.tiff',dpi=300)
 C = []
+fractions = []
+sample_Cs = []
 for i in range(0,len(cb_counties)):
     f = float(cb_counties.loc[i,'FIPS'])
     idx = sub_fips.index(f)
     if not idx:
-        C.append(0)
+        if idx < 1:
+            d_value = d_sample[idx]
+            fraction = d_value/M
+            fractions.append(fraction)
+            sample_c = cmap(fraction)
+            sample_Cs.append(sample_c)
+            hexa = matplotlib.colors.rgb2hex(sample_c)
+            C.append(hexa)
+        else:    
+            C.append(C[-1])
     else:
         d_value = d_sample[idx]
-        sample_c = cmap(d_value/M)
+        fraction = d_value/M
+        fractions.append(fraction)
+        sample_c = cmap(fraction)
+        sample_Cs.append(sample_c)
         hexa = matplotlib.colors.rgb2hex(sample_c)
         C.append(hexa)
         

@@ -62,8 +62,8 @@ def test(DV, LC, C_Y, LL, DM, C2H_map, C2H, locations, hubs, Q):
 
         CS_cultivation_opex += CS_per_ha*DV[i]*(lb_to_kg)*(1/1500)*0.50*C2H[i]
         
-        # Cultivation constraints (land limits)
-        Constraints.append(DV[i] - LL[i] - 5) #allow some slack in DVs
+        # # Cultivation constraints (land limits)
+        # Constraints.append(DV[i] - LL[i] - 5) #allow some slack in DVs
         
     ################################
         
@@ -104,8 +104,7 @@ def test(DV, LC, C_Y, LL, DM, C2H_map, C2H, locations, hubs, Q):
             CS_refinery_capex+= 400000000*(scale)**.6
     
     # Sets ethanol production quota (L)
-    Constraints.append(Q*0.95-sum(CS_ethanol)[0])
-    Constraints.append(sum(CS_ethanol)[0] - Q*1.05)
+    Constraints.append(Q - np.sum(CS_ethanol) - 5)
 
     Constraints = list(Constraints)
     

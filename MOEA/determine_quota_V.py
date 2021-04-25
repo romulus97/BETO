@@ -8,7 +8,6 @@ import numpy as np
 import corn_stover_cultivation as CS_cultivation
 import corn_stover_processing as CS_processing
 
-
 def QD (groups,reduced_counties,locations):
 
     #####################################################################
@@ -106,7 +105,7 @@ def QD (groups,reduced_counties,locations):
     #pre-load test decision variables
     V = []
     for i in range(0,len(reduced_counties)):
-        V.append(reduced_land_limits[i] * 0.50) #50% of theoretical capacity
+        V.append(reduced_land_limits[i]) 
       
     LC = reduced_land_costs # land costs per county
     C_Y = reduced_C_yield # corn yield per acre
@@ -119,7 +118,7 @@ def QD (groups,reduced_counties,locations):
     CS_C2H_prod = np.zeros((len(LC),len(hubs)))
     CS_refinery_kg = 0
     CS_ethanol = np.zeros((len(locations),1))
-
+    
     
     ##############################
     # Cultivation and Harvesting
@@ -159,7 +158,9 @@ def QD (groups,reduced_counties,locations):
     # Upper bound hub 1Ms kgs
     UB = 0
     for j in range(0,len(hubs)):
-        UB = max(UB,sum(CS_C2H_prod[:,j]))
+        UB = max(sum(CS_C2H_prod))
+    
+    v = np.array(V)*0.50
 
-    return [sum(CS_ethanol[:]),UB]
+    return sum(CS_ethanol[:])*.50,UB,v #50% of theoretical capacity
 
