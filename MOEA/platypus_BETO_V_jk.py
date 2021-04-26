@@ -210,7 +210,7 @@ def simulate(
    
     c2h_map = np.array(C2H_map)
     # Automatic flow to pre-processing hub
-    CS_C2H_prod = c2h_map * np.transpose(np.array([(CS_per_ha * v[0:len(LC)])])) #kg = kg*ha/ha
+    CS_C2H_prod = c2h_map * np.transpose(np.array([(CS_per_ha * v[0:len(LC)])]*len(hubs))) #kg = kg*ha/ha
     
     CS_cultivation_opex += np.sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
    
