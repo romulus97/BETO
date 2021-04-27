@@ -144,8 +144,13 @@ for i in range(0,len(reduced_counties)):
 #########################################################
 # Identify quota as 50% of maximum theoretical production
 import determine_quota_V
-quota, UB = determine_quota_V.QD(groups,reduced_counties,locations)
+quota, UB , v_test = determine_quota_V.QD(groups,reduced_counties,locations)
 quota = quota[0]
+
+
+# import determine_quota_V
+# quota, UB = determine_quota_V.QD(groups,reduced_counties,locations)
+# quota = quota[0]
  
 #####################################################################
 ##########           FUNCTION DEFINITION     ########################
@@ -208,7 +213,8 @@ def simulate(
     c2h_map = np.array(C2H_map)
     # Automatic flow to pre-processing hub
     CS_C2H_prod = c2h_map * np.transpose(np.array([(CS_per_ha * v[0:len(LC)]),] * len(hubs))) #kg = kg*ha/ha
-    
+    test = np.transpose(np.array([(CS_per_ha * v[0:len(LC)]),]))
+    print(test.shape)
     CS_cultivation_opex += np.sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
    
     # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP 
@@ -309,7 +315,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
