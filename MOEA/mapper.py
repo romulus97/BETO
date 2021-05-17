@@ -9,6 +9,8 @@ Spyder Editor
 This is a temporary script file.
 """
 
+version = 'all'
+
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -132,7 +134,8 @@ plt.savefig('subset.tiff',dpi=300)
 
 
 #objective function
-df_O = pd.read_csv('Objective_Functions_all.csv',header=0,index_col=0)
+fn = 'Objective_Functions_' + version + '.csv'
+df_O = pd.read_csv(fn,header=0,index_col=0)
 df_O.columns = ['ref_capex','trans_opex']
 
 r = []
@@ -172,13 +175,15 @@ plt.savefig('pareto.tiff',dpi = 330)
     
     
 #decision variables
-df_D = pd.read_csv('Decision_Variables_all.csv',header=0,index_col=0)
+fn = 'Decision_Variables_' + version + '.csv'
+df_D = pd.read_csv(fn,header=0,index_col=0)
 
 
 #minimum capex
 d_sample = list(df_D.iloc[1,0:len(df_subset)])
 cmap = matplotlib.cm.get_cmap('cool')
-M = max(d_sample)
+# M = max(d_sample)
+M = np.max(df_D.iloc[:,0:len(df_subset)].values)
 
 # plt.savefig('min_ref_capex.tiff',dpi=300)
 C = []
@@ -217,7 +222,8 @@ for i in range(0,dvs):
         f = d_sample[i*19+j]
         refinery_flow[j] += f
 
-mx = max(refinery_flow)
+mx = np.max(df_D.iloc[:,len(df_subset):].values)
+
 for i in range(0,dvs):
     refinery_flow[i] = (refinery_flow[i]/mx)*16
 
@@ -239,3 +245,69 @@ ax.set_ylim([-2000000,500000])
 plt.axis('off')
 
 plt.savefig('example.tiff',dpi=300)
+
+
+#minimum travel opex
+d_sample = list(df_D.iloc[0,0:len(df_subset)])
+cmap = matplotlib.cm.get_cmap('cool')
+# M = max(d_sample)
+
+# plt.savefig('min_ref_capex.tiff',dpi=300)
+C = []
+fractions = []
+sample_Cs = []
+for i in range(0,len(cb_counties)):
+    f = float(cb_counties.loc[i,'FIPS'])
+    idx = sub_fips.index(f)
+    if not idx:
+        if idx < 1:
+            d_value = d_sample[idx]
+            fraction = d_value/M
+            fractions.append(fraction)
+            sample_c = cmap(fraction)
+            sample_Cs.append(sample_c)
+            hexa = matplotlib.colors.rgb2hex(sample_c)
+            C.append(hexa)
+        else:    
+            C.append(C[-1])
+    else:
+        d_value = d_sample[idx]
+        fraction = d_value/M
+        fractions.append(fraction)
+        sample_c = cmap(fraction)
+        sample_Cs.append(sample_c)
+        hexa = matplotlib.colors.rgb2hex(sample_c)
+        C.append(hexa)
+        
+cb_counties['color'] = C
+
+d_sample = list(df_D.iloc[0,len(df_subset):])
+dvs = int(np.sqrt(len(d_sample)))
+refinery_flow = np.zeros((dvs,))
+for i in range(0,dvs):
+    for j in range(0,dvs):
+        f = d_sample[i*19+j]
+        refinery_flow[j] += f
+
+# mx = max(refinery_flow)
+for i in range(0,dvs):
+    refinery_flow[i] = (refinery_flow[i]/mx)*16
+
+geo_df['marker_size'] = refinery_flow
+
+fig,ax = plt.subplots()
+
+state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='white',linewidth=0.5)
+cb_counties.plot(ax=ax,color='white',alpha=1,edgecolor='darkslategrey',linewidth=0.2)   
+cb_counties.plot(ax=ax,color=list(cb_counties['color']),alpha=1,edgecolor='none',linewidth=0.8)
+
+# plot refineries
+geo_df.plot(ax=ax,markersize=geo_df['marker_size'],color="None",marker='o',edgecolor='black',linewidth=1)
+
+
+ax.set_box_aspect(1)
+ax.set_xlim(-750000,2000000)
+ax.set_ylim([-2000000,500000])
+plt.axis('off')
+
+plt.savefig('example2.tiff',dpi=300)

@@ -144,7 +144,7 @@ for i in range(0,len(reduced_counties)):
 # Identify quota as 50% of maximum theoretical production
 import determine_quota_V
 quota, UB , v_test = determine_quota_V.QD(groups,reduced_counties,locations)
-quota = quota[0]
+quota = quota[0]*.05
  
 #####################################################################
 ##########           FUNCTION DEFINITION     ########################
@@ -313,7 +313,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(10000)
+algorithm.run(1000000)
 
 stop = time.time()
 elapsed = (stop - start)/60

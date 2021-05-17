@@ -106,8 +106,8 @@ def sim(kg_stover):
     
     # 900 Final Product 
     L_ethanol = kg_ethanol * kg_ethanol_to_L_ethanol
-    gal_ethanol_per_ton_stover = ( L_ethanol / gal_to_L ) / (S * kg_to_ton )
-    gal_ethanol_per_bu_corn_grain = gal_ethanol_per_ton_stover / ton_to_bu 
+    # gal_ethanol_per_ton_stover = ( L_ethanol / gal_to_L ) / (S * kg_to_ton )
+    # gal_ethanol_per_bu_corn_grain = gal_ethanol_per_ton_stover / ton_to_bu 
    
     
     # 1000 Scaled production
