@@ -209,12 +209,11 @@ def simulate(
     # Operating costs (need to expand)
     harvesting = 38.31*ha_to_acre # $ per ha
     CS_cultivation_opex += np.sum((v[0:len(LC)]*(seeds_per_ha*.00185 + fertilization_per_ha[0]*0.55 + fertilization_per_ha[1]*0.46 + fertilization_per_ha[2]*0.50 + lime_per_ha*0.01 + harvesting))) #herbicide in per ha??
-   
+    
     c2h_map = np.array(C2H_map)
     # Automatic flow to pre-processing hub
     CS_C2H_prod = c2h_map * np.transpose(np.array([(CS_per_ha * v[0:len(LC)]),] * len(hubs))) #kg = kg*ha/ha
-    test = np.transpose(np.array([(CS_per_ha * v[0:len(LC)]),]))
-    print(test.shape)
+    
     CS_cultivation_opex += np.sum(CS_per_ha*vars[0:len(LC)]*(lb_to_kg)*(1/1500)*0.50*C2H)
    
     # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP 
@@ -248,12 +247,13 @@ def simulate(
     #for j in range(0,len(hubs)):
     P = np.array(CS_C2H_prod)
     F = np.array(CS_flow_matrix)
-   
+    
     # Hubs collect biomass from counties
     CS_hub_kg = np.sum(P, axis=0) #kg
     
     # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
     CS_flow = np.sum(F, axis=1) #kg
+    
     flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs #kg
     
     # for j in range(0,len(hubs)):
@@ -276,7 +276,7 @@ def simulate(
         # Refinery capex
         #if CS_refinery_kg[k] > 5:   #skip or remove
     scale = CS_refinery_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
-    CS_refinery_capex = 400000000*(scale)**.6
+    CS_refinery_capex = 400000000*((scale)**.6)
     
     # Sets ethanol production quota (L)
     Constraints.append(Q - np.sum(CS_ethanol)) #L
