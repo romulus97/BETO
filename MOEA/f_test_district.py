@@ -97,7 +97,7 @@ for county in reduced_counties:
 
 # Pre-define location of refineries
 # put a number > 0 and < number of hubs if desired; if not, problem defaults to full list of hubs
-num_refineries = 0
+num_refineries = 1
 
 #hub-to-hub data
 filename = 'H2H_' + str(groups) + '.xlsx'
