@@ -59,6 +59,8 @@ for i in hubs: #plot to matrix
 
 r_idx = np.array(r_loc) - 1 #indexes for hubs
 
+
+
 r_map = H2H_map[:,[r_idx]] #only distances from each hub to each refinery
 
 flow_map = np.zeros((len(hubs), len(hubs))) #full matrix for hub to refinery  
@@ -79,6 +81,8 @@ if num_refineries == 1: #argmin messes up at 1 refinery but this fixes it
     hub_flow[np.where(hub_flow == 0)] = r_idx
 else:
     pass
+
+
     
 AgD2H_flow = AgD2H['destinationID'].to_list() #list from each AgD to closest hub
 
@@ -86,7 +90,7 @@ C_Y = np.array(geodata['yield_bpa'])
 
 (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y)
 
-r = 15 #randint(0,99) #chose random cultivation decisions from file
+r = randint(0,99) #chose random cultivation decisions from file
 
 AgD_hec = AgD_cultivation[r:(r+1)].T #pull cultivation and transpose into column
 
@@ -98,11 +102,15 @@ h_c_sum = AgD_c.groupby(['hub']).agg({0: sum}).reset_index() #amount of cultivat
 
 hub_sum = h_c_sum.drop(columns=['hub']) #drop hub column
 
+
+
 truck_load = pd.DataFrame(np.array(hub_sum)/14969) #amount a truck can carry in kg (abitrary value. looked up on wiki)
 
 travel_costs = truck_load * ((df_hub_dist/1.609) * 2.00) #total travel cost of all biomass from hub to closest refinery (does not include truck return trip and approximating $2 per mi)
 
 travel_costs_total = np.sum(np.array(travel_costs)) #total transportation costs
+
+
 
 h_c_sum['refinery'] = hub_flow #add refinery destination
 
@@ -115,6 +123,8 @@ ref = (np.array(ref_sum.drop(columns=[0])) + 1 ) #refinery index list to refiner
 scale = ref_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
 
 refinery_capex = 400000000*((scale)**.6) #Jack's scale 
+
+
 
 ref_costs = pd.DataFrame(refinery_capex) #convert to df
 
