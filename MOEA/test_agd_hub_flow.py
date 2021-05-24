@@ -35,7 +35,7 @@ hubs = cords['Hubs'].to_list()
 ################## PROCESSING ########################
 ######################################################
 
-num_refineries = 3 #Set number of refineries
+num_refineries = 0 #Set number of refineries
 
 r_loc = [] #refineries chosen
 
@@ -65,13 +65,22 @@ flow_map[:,[r_idx]] = r_map # '' #
 
 hub_dist = np.min(np.where(flow_map==0, flow_map.max(), flow_map), axis=1) #distance from each hub to closest refinery
 
+hub_dist[r_idx] = 0 #hubs that are choosen go to stay don't transfer
+
 df_hub_dist = pd.DataFrame(hub_dist) #dataframe of hub_dist
 
 hub_flow = np.argmin(np.where(flow_map==0, flow_map.max(), flow_map), axis=1) #index of closest refinery to hub   
 
+hub_flow[r_idx] = r_idx #hubs that are choosen don't transfer
+
+if num_refineries == 1: #argmin messes up at 1 refinery but this fixes it
+    hub_flow[np.where(hub_flow == 0)] = r_idx
+else:
+    pass
+    
 AgD2H_flow = AgD2H['destinationID'].to_list() #list from each AgD to closest hub
 
-r = randint(0,99) #chose random cultivation decisions from file
+r = 15 #randint(0,99) #chose random cultivation decisions from file
 
 AgD_hec = AgD_cultivation[r:(r+1)].T #pull cultivation and transpose into column
 
@@ -87,6 +96,8 @@ truck_load = pd.DataFrame(np.array(hub_sum)/14969) #amount a truck can carry in 
 
 travel_costs = truck_load * df_hub_dist #total travel cost of all biomass from hub to closest refinery (does not include truck return trip)
 
+travel_costs_total = np.sum(np.array(travel_costs)) #total transportation costs
+
 h_c_sum['refinery'] = hub_flow #add refinery destination
 
 ref_sum = h_c_sum.groupby(['refinery']).agg({0: sum}).reset_index() #sum culivation at refinery
@@ -101,6 +112,8 @@ refinery_capex = 400000000*((scale)**.6) #Jack's scale
 
 ref_costs = pd.DataFrame(refinery_capex) #convert to df
 
+ref_costs_total = np.sum(np.array(ref_costs)) #total refinery costs
+
 ref_costs['refinery'] = ref #add refinery number to ref_costs
 
 travel_costs['refinery'] = (np.array(h_c_sum['refinery']) + 1) #refinery index to refinery number add to travel costs
@@ -111,8 +124,13 @@ travel_costs['refinery'] = (np.array(h_c_sum['refinery']) + 1) #refinery index t
 
 print(travel_costs) # $
     
+print(travel_costs_total) # $
+
 print(ref_costs)  # $
-   
+
+print(ref_costs_total) # $
+
+print(r_loc)
   
 stop = time.time()
 elapsed = (stop - start)/60
