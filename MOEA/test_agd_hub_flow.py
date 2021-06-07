@@ -37,7 +37,7 @@ geodata = pd.read_excel('agd_geodata_cb.xlsx', engine='openpyxl')
 ################## PROCESSING ########################
 ######################################################
 
-num_refineries = 1 #Set number of refineries
+num_refineries = 0 #Set number of refineries
 
 r_loc = [] #refineries chosen
 
@@ -84,21 +84,25 @@ else:
 
 
     
-AgD2H_flow = AgD2H['destinationID'].to_list() #list from each AgD to closest hub
-
 C_Y = np.array(geodata['yield_bpa'])
 
 (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(C_Y)
+
+CS_per_ha_list = CS_per_ha.tolist()
 
 r = randint(0,99) #chose random cultivation decisions from file
 
 AgD_hec = AgD_cultivation[r:(r+1)].T #pull cultivation and transpose into column
 
-AgD_c = pd.DataFrame(np.array(AgD_hec) * CS_per_ha) #covert to kg 
+AgD_hec['CS_per_ha'] = CS_per_ha_list
 
-AgD_c['hub'] = AgD2H_flow #add list of closest hubs
+AgD_hec['kg'] = AgD_hec[r] * AgD_hec['CS_per_ha']
 
-h_c_sum = AgD_c.groupby(['hub']).agg({0: sum}).reset_index() #amount of cultivation that is at each hub  
+AgD_c = AgD_hec['kg'].reset_index()
+
+AgD_c['hub'] = AgD2H['destinationID'] #add list of closest hubs
+
+h_c_sum = AgD_c.groupby(['hub']).agg({'kg': sum}).reset_index() #amount of cultivation that is at each hub  
 
 hub_sum = h_c_sum.drop(columns=['hub']) #drop hub column
 
@@ -106,7 +110,7 @@ hub_sum = h_c_sum.drop(columns=['hub']) #drop hub column
 
 truck_load = pd.DataFrame(np.array(hub_sum)/14969) #amount a truck can carry in kg (abitrary value. looked up on wiki)
 
-travel_costs = truck_load * ((df_hub_dist/1.609) * 2.00) #total travel cost of all biomass from hub to closest refinery (does not include truck return trip and approximating $2 per mi)
+travel_costs = truck_load * ((np.array(df_hub_dist)/1.609) * 2.00) #total travel cost of all biomass from hub to closest refinery (does not include truck return trip and approximating $2 per mi)
 
 travel_costs_total = np.sum(np.array(travel_costs)) #total transportation costs
 
@@ -114,11 +118,11 @@ travel_costs_total = np.sum(np.array(travel_costs)) #total transportation costs
 
 h_c_sum['refinery'] = hub_flow #add refinery destination
 
-ref_sum = h_c_sum.groupby(['refinery']).agg({0: sum}).reset_index() #sum culivation at refinery
+ref_sum = h_c_sum.groupby(['refinery']).agg({'kg': sum}).reset_index() #sum culivation at refinery
                                                 
 ref_kg = np.array(ref_sum.drop(columns=['refinery'])) #drop refinery column
 
-ref = (np.array(ref_sum.drop(columns=[0])) + 1 ) #refinery index list to refinery number
+ref = (np.array(ref_sum.drop(columns='kg')) + 1 ) #refinery index list to refinery number
 
 scale = ref_kg/(5563*142) # Based on kg per ha and ha scaling in Jack's TEA file
 

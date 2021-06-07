@@ -32,6 +32,7 @@ groups = 20
 filename = 'AgD2H_48_cb.xlsx'
 df_D2H = pd.read_excel(filename,header=0, engine='openpyxl')
 c = list(df_D2H['STASD_N'])
+AgD2H_flow = df_D2H['destinationID'].to_list()
 
 #eliminate districts that don't appear in both lists
 for i in districts:
@@ -80,8 +81,9 @@ filename = 'AgD_48g_H2H_cb.xlsx'
 df_H2H = pd.read_excel(filename,header=0, engine='openpyxl')
 hubs = list(df_H2H['OriginID'].unique())
 
+r_idx = np.array(hubs) - 1
 locations = hubs
-    
+
 ################################
 # Convert to function inputs
 
@@ -102,7 +104,7 @@ for i in range(0,len(districts)):
     map_D2H[i,h] = 1    
 
 
-#########################################################
+########################################################
 # Identify quota as % of maximum theoretical production
 import determine_quota_V_district
 p=.05
@@ -179,8 +181,48 @@ def simulate(
     # Automatic flow to pre-processing hub
     CS_D2H_prod = d2h_map * np.transpose(np.array([(CS_per_ha * v[0:num_c])]*num_h)) #kg = kg*ha/ha
     
-    CS_travel_opex += np.sum(CS_per_ha*v[0:num_c]*(lb_to_kg)*(1/1500)*0.50*D2H)
-   
+    kg_stover = CS_per_ha*v[0:num_c]
+    
+    CS_travel_opex_d2h = pd.DataFrame(kg_stover*(lb_to_kg)*(1/1500)*0.50*D2H)
+    
+    CS_travel_opex_d2h['hub'] = AgD2H_flow
+    
+    CS_travel_opex_ih = CS_travel_opex_d2h.groupby(['hub']).agg({0: sum}).reset_index()
+    
+    flow_map = np.zeros((len(hubs), len(hubs))) #full matrix for hub to refinery  
+
+    flow_map = np.array(dist_map)
+
+    hub_dist = np.min(np.where(flow_map==0, flow_map.max(), flow_map), axis=1) #distance from each hub to closest refinery
+
+    hub_dist[r_idx] = 0 #hubs that are choosen go to stay don't transfer
+
+    df_hub_dist = pd.DataFrame(hub_dist) #dataframe of hub_dist
+
+    hub_flow = np.argmin(np.where(flow_map==0, flow_map.max(), flow_map), axis=1) #index of closest refinery to hub   
+
+    hub_flow[r_idx] = r_idx #hubs that are choosen don't transfer
+
+    if num_refineries == 1: #argmin messes up at 1 refinery but this fixes it
+        hub_flow[np.where(hub_flow == 0)] = r_idx
+    else:
+        pass
+    
+    
+    
+    AgD_c = pd.DataFrame(kg_stover)
+    
+    AgD_c['hub'] = AgD2H_flow #add list of closest hubs
+
+    h_c_sum = AgD_c.groupby(['hub']).agg({0: sum}).reset_index() #amount of cultivation that is at each hub  
+
+    hub_sum = h_c_sum.drop(columns=['hub']) #drop hub column
+    
+    
+    CS_travel_opex_h2h = hub_sum*(lb_to_kg)*(1/1500)*0.50*np.array(df_hub_dist)
+    
+    CS_travel_opex = np.sum(np.array(CS_travel_opex_ih) + np.array(CS_travel_opex_h2h))
+    
     ###############################
     CS_hub_kg = np.sum(CS_D2H_prod, axis=0) #kg
        
@@ -238,7 +280,7 @@ problem.function = simulate
 algorithm = NSGAII(problem)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(1000)
 
 stop = time.time()
 elapsed = (stop - start)/60
