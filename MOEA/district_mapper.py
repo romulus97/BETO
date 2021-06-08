@@ -9,7 +9,7 @@ Spyder Editor
 This is a temporary script file.
 """
 
-version = 'scale_filter_district'
+version = 'district_piecewise'
 
 import pandas as pd
 import numpy as np

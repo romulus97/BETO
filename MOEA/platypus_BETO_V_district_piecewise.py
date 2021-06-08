@@ -4,7 +4,7 @@ Created on Fri Jul  3 16:20:20 2020
 @author: jkern
 """
 
-from platypus import NSGAII, Problem, Real
+from platypus import GDE3, Problem, Real
 import random
 from random import randint
 import pandas as pd
@@ -14,7 +14,7 @@ import corn_stover_cultivation_V as CS_cultivation
 import corn_stover_processing_V as CS_processing
 
 start = time.time()
-version = 'scale_filter_district'
+version = 'district_piecewise'
 
 #####################################################################
 ##########           IMPORT DATA           ##########################
@@ -293,10 +293,13 @@ problem.constraints[:] = "<=0"
 problem.function = simulate
 
 # What algorithm?
-algorithm = NSGAII(problem)
+algorithm = GDE3(
+    problem=problem,
+    population_size=250,
+    )
 
 # Evaluate function # of times
-algorithm.run(500000)
+algorithm.run(10000)
 
 stop = time.time()
 elapsed = (stop - start)/60

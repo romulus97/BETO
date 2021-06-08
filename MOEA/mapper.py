@@ -10,6 +10,7 @@ This is a temporary script file.
 """
 
 version = 'all'
+#version = 'district_piecewise'
 
 import pandas as pd
 import numpy as np
