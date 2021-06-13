@@ -264,7 +264,7 @@ def simulate(
     Constraints = list(Constraints)
     
     # Returns list of objectives, Constraints
-    return [np.sum(CS_refinery_capex), CS_travel_opex], Constraints
+    return [CS_refinery_capex, CS_travel_opex], Constraints
 
 
 #####################################################################
@@ -299,7 +299,7 @@ algorithm = GDE3(
     )
 
 # Evaluate function # of times
-algorithm.run(10000)
+algorithm.run(1000000)
 
 stop = time.time()
 elapsed = (stop - start)/60

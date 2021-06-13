@@ -15,15 +15,15 @@ def QD (districts,locations,p):
     #####################################################################
     
     # import county level data
-    df_geo = pd.read_excel('US_ag_district_geodata.xlsx',header=0, engine='openpyxl')
+    df_geo = pd.read_csv('US_ag_district_geodata.csv',header=0)
     districts = list(df_geo['STASD_N'])
     
     #specify grouping
     groups = 20
     
     #district-to-hub data
-    filename = 'AgD2H_48_cb.xlsx'
-    df_D2H = pd.read_excel(filename,header=0, engine='openpyxl')
+    filename = 'AgD2H_48_cb.csv'
+    df_D2H = pd.read_csv(filename,header=0)
     c = list(df_D2H['STASD_N'])
     
     #eliminate districts that don't appear in both lists
@@ -64,8 +64,8 @@ def QD (districts,locations,p):
     
     
     #hub-to-hub data
-    filename = 'AgD_48g_H2H_cb.xlsx'
-    df_H2H = pd.read_excel(filename,header=0, engine='openpyxl')
+    filename = 'AgD_48g_H2H_cb.csv'
+    df_H2H = pd.read_csv(filename,header=0)
     hubs = list(df_H2H['OriginID'].unique())
     locations=hubs
         
