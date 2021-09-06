@@ -10,7 +10,6 @@ from random import randint
 import pandas as pd
 import numpy as np
 import time
-import corn_stover_cultivation_V as CS_cultivation
 import corn_stover_processing_V as CS_processing
 
 start = time.time()
@@ -49,11 +48,12 @@ land_costs = df_geo.loc[:,'land_costs-$/ha'].values # $ per ha
 land_limits = df_geo['land_limits_ha'].values # county ag production area in acres
 years = range(1958,2021)
 listyears =[]
+
 for year in years :
     listyears.append(str(year))
-# Corn Stover
-C_yield = df_geo.iloc[:,6:].values  #yield in bushels per acre
 
+# Corn Grain yield
+C_yield = df_geo.iloc[:,6:].values  #yield in bushels per acre
 
 
 ########################################################################
@@ -70,10 +70,10 @@ for d in districts:
     
     idx = districts.index(d)
     
-    # distance from each county to pre-defined hub
+    # distance from each district to pre-defined hub
     dist_D2H.append(df_D2H.loc[df_D2H['STASD_N']==d,'travel_dist_km'].values[0])
     
-    # list of hubs assigned to each county
+    # list of hubs assigned to each district
     district_hubs.append(df_D2H.loc[df_D2H['STASD_N']==d,'destinationID'].values[0]) # the whole corn belt divided 18 hubs abd this defines which ag_dist found under which hub
 
 
@@ -155,9 +155,9 @@ def simulate(
     num_l = np.size(locations) #size of the locations 
      
      # Empty parameters 
-    CS_cultivation_capex = np.zeros((len(years, 1))) #not as single scalars. they need to be either vectors, or empty sets
-    CS_cultivation_opex = np.zeros((len(years, 1))) #make them vectors of zeros
-    CS_prod_total = np.zeros((len(years, 1)))
+    CG_cultivation_capex = np.zeros((len(years, 1))) #not as single scalars. they need to be either vectors, or empty sets
+    CG_cultivation_opex = np.zeros((len(years, 1))) #make them vectors of zeros
+    CG_prod_total = np.zeros((len(years, 1)))
     # CS_travel_opex = np.zeros((len(years, 1)))
     
     # CS_flow_matrix = np.zeros((len(hubs),len(locations)))
@@ -171,10 +171,10 @@ def simulate(
     L = np.array(LC) #$/acre
     v = np.array(vars)
         
-    CS_cultivation_capex += np.sum(v[0:num_c]*(L+5977.4)) #  ha*$/acre
+    CG_cultivation_capex += np.sum(v[0:num_c]*(L+5977.4)) #  ha*$/acre
     # (CS_per_ha, seeds_per_ha, fertilization_per_ha, lime_per_ha)  = CS_cultivation.sim(Y) #kg/ha # kg_stover_per_ha =CS_per_ha #output $ 
     
-    CS_cultivation_opex += np.sum((v[0:num_c]*(CG_cost_per_ha))) #herbicide in per ha??
+    CG_cultivation_opex += np.sum((v[0:num_c]*(CG_cost_per_ha))) #herbicide in per ha??
     Constraints = [] # constraints
     
     for year in years:
@@ -194,8 +194,8 @@ def simulate(
         # d2h_map = np.array(D2H_map)
         # Automatic flow to pre-processing hub
         # CS_D2H_prod = d2h_map * np.transpose(np.array([(CS_per_ha * v[0:num_c])]*num_h)) #kg = kg*ha/ha
-        CS_prod = np.sum(v[0:num_c]*Y)
-        CS_prod_total[i] = CS_prod
+        CG_prod = np.sum(v[0:num_c]*Y)
+        CG_prod_total[i] = CG_prod
         
         # CS_cultivation_opex += np.sum(CS_per_ha*v[0:num_c]*(lb_to_kg)*(1/1500)*0.50*D2H)
        
@@ -257,7 +257,7 @@ def simulate(
         # scale = filter_flows*(CS_refinery_kg/(5563*142))
                 
         # Ethanol produced at refinery at hub 'l'
-        CS_ethanol = CS_processing.sim(CS_prod) #L
+        CG_ethanol = CS_processing.sim(CG_prod) #L
         # scale = CS_refinery_kg/(5563*142)
         
         # for k in range(0,len(locations)):
@@ -276,12 +276,12 @@ def simulate(
         # Sets ethanol production quota (L)
         # Constraints.append(Q - np.sum(CS_ethanol)-5) #L
         # Constraints.append(sum(CS_ethanol)[0] - Q*1.05) #remove upper contraint 
-    Constraints.append(Q*0.5 - sum(CS_prod))
+    Constraints.append(Q*0.5 - sum(CG_prod))
     Constraints = list(Constraints)
         
     # Returns list of objectives, Constraints
-    biomass_cost = (CS_cultivation_capex + CS_cultivation_opex*len(years))
-    return [biomass_cost,   np.sum(v[0:num_c]) ], Constraints ##
+    biomass_cost = (CG_cultivation_capex + CG_cultivation_opex*len(years))
+    return [biomass_cost, np.sum(v[0:num_c]) ], Constraints ##
     
 #return [biomass_cost,   np.sum(v[0:num_c]), np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
@@ -293,8 +293,8 @@ def simulate(
 
 # Number of variables, constraints, objectives
 g = np.size(land_costs)
-num_variables = g + np.size(hubs) * np.size(locations)
-num_constraints = np.size(hubs) + 1 #+ g   #must match to contraints
+num_variables = g 
+num_constraints = 1 #+ g   #must match to contraints
 num_objs = 3
 
 # problem = Problem(num_variables,num_objs,num_constraints)
@@ -306,7 +306,7 @@ problem = Problem(num_variables,num_objs,num_constraints)
 for i in range(0,np.size(land_costs)):
     problem.types[i] = Real(0,land_limits[i]+5)
 # problem.types[g:] = Real(0,UB+5)
-problem.types[g:] = Real(0,UB*100)
+# problem.types[g:] = Real(0,UB*100)
 problem.constraints[:] = "<=0"
 
 #What function?
@@ -319,7 +319,7 @@ algorithm = GDE3(
     )
 
 # Evaluate function # of times
-algorithm.run(5000000)
+algorithm.run(5000)
 
 stop = time.time()
 elapsed = (stop - start)/60
