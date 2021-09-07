@@ -276,112 +276,125 @@ def simulate(
         # Sets ethanol production quota (L)
         # Constraints.append(Q - np.sum(CS_ethanol)-5) #L
         # Constraints.append(sum(CS_ethanol)[0] - Q*1.05) #remove upper contraint 
+        
+        Z = []
+        if (Q - CG_ethanol[year]) < 0:
+       
+            shortfall = 0
+        
+        else: 
+            
+            shortfall = Q - CG_ethanol[year] 
+    
+        Z.append(sum(shortfall))
+        
     Constraints.append(Q*0.5 - sum(CG_prod))
     Constraints = list(Constraints)
         
     # Returns list of objectives, Constraints
     biomass_cost = (CG_cultivation_capex + CG_cultivation_opex*len(years))
-    return [biomass_cost, np.sum(v[0:num_c]) ], Constraints ##
+    
+    return [biomass_cost, np.sum(v[0:num_c])], Z, Constraints ##
     
 #return [biomass_cost,   np.sum(v[0:num_c]), np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
 
 
-####################################################################
-#########           MOEA EXECUTION          ########################
-####################################################################
+# ####################################################################
+# #########           MOEA EXECUTION          ########################
+# ####################################################################
 
-# Number of variables, constraints, objectives
-g = np.size(land_costs)
-num_variables = g 
-num_constraints = 1 #+ g   #must match to contraints
-num_objs = 3
+# # Number of variables, constraints, objectives
+# g = np.size(land_costs)
+# num_variables = g 
+# num_constraints = 1 #+ g   #must match to contraints
+# num_objs = 3
+
+# # problem = Problem(num_variables,num_objs,num_constraints)
+# # problem.types[0:g+1] = Real(0,max(reduced_land_limits))
+# # problem.types[g+1:] = Real(0,UB )
+# # problem.constraints[:] = "<=0"
 
 # problem = Problem(num_variables,num_objs,num_constraints)
-# problem.types[0:g+1] = Real(0,max(reduced_land_limits))
-# problem.types[g+1:] = Real(0,UB )
+# for i in range(0,np.size(land_costs)):
+#     problem.types[i] = Real(0,land_limits[i]+5)
+# # problem.types[g:] = Real(0,UB+5)
+# # problem.types[g:] = Real(0,UB*100)
 # problem.constraints[:] = "<=0"
 
-problem = Problem(num_variables,num_objs,num_constraints)
-for i in range(0,np.size(land_costs)):
-    problem.types[i] = Real(0,land_limits[i]+5)
-# problem.types[g:] = Real(0,UB+5)
-# problem.types[g:] = Real(0,UB*100)
-problem.constraints[:] = "<=0"
+# #What function?
+# problem.function = simulate
 
-#What function?
-problem.function = simulate
+# # What algorithm?
+# algorithm = GDE3(
+#     problem=problem,
+#     population_size=250,
+#     )
 
-# What algorithm?
-algorithm = GDE3(
-    problem=problem,
-    population_size=250,
-    )
+# # Evaluate function # of times
+# algorithm.run(5000)
 
-# Evaluate function # of times
-algorithm.run(5000)
-
-stop = time.time()
-elapsed = (stop - start)/60
-mins = str(elapsed) + ' minutes'
-print(mins)
+# stop = time.time()
+# elapsed = (stop - start)/60
+# mins = str(elapsed) + ' minutes'
+# print(mins)
 
 
-#####################################################################
-##########           OUTPUTS                 ########################
-#####################################################################
+# #####################################################################
+# ##########           OUTPUTS                 ########################
+# #####################################################################
 
-# solutions = [s for s in algorithm.result]
+# # solutions = [s for s in algorithm.result]
 
-solutions = [s for s in algorithm.result if s.feasible]
+# solutions = [s for s in algorithm.result if s.feasible]
 
-D = np.zeros((len(solutions),num_variables))
-O = np.zeros((len(solutions),num_objs))
+# D = np.zeros((len(solutions),num_variables))
+# O = np.zeros((len(solutions),num_objs))
 
-for s in solutions:
+# for s in solutions:
     
-    idx = solutions.index(s)
-    # ax.scatter(s.objectives[0]/1000,s.objectives[1],s.objectives[2]*-1, c = 'red',alpha=0.5)
+#     idx = solutions.index(s)
+#     # ax.scatter(s.objectives[0]/1000,s.objectives[1],s.objectives[2]*-1, c = 'red',alpha=0.5)
 
-    #record solution information
-    for i in range(0,num_variables):
-        D[idx,i] = s.variables[i]
-    for j in range(0,num_objs):
-        O[idx,j] = s.objectives[j]
+#     #record solution information
+#     for i in range(0,num_variables):
+#         D[idx,i] = s.variables[i]
+#     for j in range(0,num_objs):
+#         O[idx,j] = s.objectives[j]
 
-df_D = pd.DataFrame(D)
-fn = 'Decision_Variables_' + version + '.csv'
-df_D.to_csv(fn)
+# df_D = pd.DataFrame(D)
+# fn = 'Decision_Variables_' + version + '.csv'
+# df_D.to_csv(fn)
 
-df_O = pd.DataFrame(O)
-fn2 = 'Objective_functions_' + version + '.csv'
-df_O.to_csv(fn2)
+# df_O = pd.DataFrame(O)
+# fn2 = 'Objective_functions_' + version + '.csv'
+# df_O.to_csv(fn2)
 
 
-# # # find constraints that are violated
-# import constraint_test
+# # # # find constraints that are violated
+# # import constraint_test
 
-# df = pd.read_csv(fn,header=0,index_col=0)
+# # df = pd.read_csv(fn,header=0,index_col=0)
 
-# LC = land_costs # land costs per county
-# C_Y = C_yield # corn yield per acre
-# LL = land_limits # land limits
-# DM = dist_map # hub to hub distances
-# D2H_map = map_D2H # binary matrix mapping counties (rows) to hubs (columns)
-# D2H = dist_D2H # county to hub distances
-# locations = locations #possible location of biorefineries,
-# hubs = hubs
-# Q = quota
+# # LC = land_costs # land costs per county
+# # C_Y = C_yield # corn yield per acre
+# # LL = land_limits # land limits
+# # DM = dist_map # hub to hub distances
+# # D2H_map = map_D2H # binary matrix mapping counties (rows) to hubs (columns)
+# # D2H = dist_D2H # county to hub distances
+# # locations = locations #possible location of biorefineries,
+# # hubs = hubs
+# # Q = quota
 
-# violations = {}
+# # violations = {}
 
-# for i in range(0,len(df)):
-#     DV = df.iloc[0,:] # take first solution
-#     [CS_refinery_capex, CS_travel_opex], Constraints = constraint_test.test(DV, LC, C_Y, LL, DM, D2H_map, D2H, locations, hubs, Q)
-#     C = []
-#     for j in range(0,len(Constraints)):
-#             if Constraints[j] > 0:
-#                 C.append(j)
-#     violations[i] = C
+# # for i in range(0,len(df)):
+# #     DV = df.iloc[0,:] # take first solution
+# #     [CS_refinery_capex, CS_travel_opex], Constraints = constraint_test.test(DV, LC, C_Y, LL, DM, D2H_map, D2H, locations, hubs, Q)
+# #     C = []
+# #     for j in range(0,len(Constraints)):
+# #             if Constraints[j] > 0:
+# #                 C.append(j)
+# #     violations[i] = C
         
         
