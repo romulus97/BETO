@@ -52,7 +52,7 @@ for year in years :
     listyears.append(str(year))
 
 # Corn Grain yield
-C_yield = df_geo.iloc[:,6:].values  #yield in bushels per acre
+C_yield = df_geo.iloc[:,8:].values  #yield in bushels per acre
 
 ########################################################################
 #########        PRE-PROCESSING       ##################################
@@ -134,16 +134,16 @@ kg_to_L_Ethanol = 1.273723
 # def simulate(
     
     
-vars, # cultivation hectares per county, hub-to-hub biomass flows
-LC = land_costs, # land costs per county
-C_Y = C_yield, # corn yield per acre
-LL = land_limits, # land limits
-CG_cost_per_ha = cost,  #corn grain cost per hectare 
-DM = dist_map, # hub to hub distances
-D2H_map = map_D2H, # binary matrix mapping counties (rows) to hubs (columns)
-D2H = dist_D2H, # county to hub distances
-locations = locations, #possible location of biorefineries,
-hubs = hubs,
+# vars, # cultivation hectares per county, hub-to-hub biomass flows
+LC = land_costs # land costs per county
+C_Y = C_yield # corn yield per acre
+LL = land_limits # land limits
+CG_cost_per_ha = cost  #corn grain cost per hectare 
+DM = dist_map # hub to hub distances
+D2H_map = map_D2H # binary matrix mapping counties (rows) to hubs (columns)
+D2H = dist_D2H # county to hub distances
+locations = locations #possible location of biorefineries,
+hubs = hubs
 Q = quota
 
 num_c = np.size(LC) #size of land cost 
@@ -154,17 +154,22 @@ num_l = np.size(locations) #size of the locations
 CG_cultivation_capex = np.zeros((len(years), 1)) #not as single scalars. they need to be either vectors, or empty sets
 CG_cultivation_opex = np.zeros((len(years), 1)) #make them vectors of zeros
 CG_prod_total = np.zeros((len(years), 1))
+CG_ethanol_total = np.zeros((len(years),1))
 
 # Capital costs (need to expand)
 L = np.array(LC) #$/acre
-v = np.array(vars)
+# v = np.array(vars)
+v = np.ones((num_c,1))*100
     
 CG_cultivation_capex += np.sum(v[0:num_c]*(L+5977.4)) #  ha*$/acre
 
 CG_cultivation_opex += np.sum((v[0:num_c]*(CG_cost_per_ha))) #herbicide in per ha??
 Constraints = [] # constraints
 
+Z = []
+
 for year in years:
+    
     i = years.index(year)
     Y = C_Y[:,i]
     
@@ -173,23 +178,23 @@ for year in years:
             
     # Ethanol produced at refinery at hub 'l'
     CG_ethanol = CS_processing.sim(CG_prod) #L
+    CG_ethanol_total[i] = CG_ethanol
     
-    Z = []
-    if (Q - CG_ethanol[year]) < 0:
+    if (Q - CG_ethanol) < 0:
    
         shortfall = 0
     
     else: 
         
-        shortfall = Q - CG_ethanol[year] 
+        shortfall = Q - CG_ethanol
 
-    Z.append(sum(shortfall))
+    Z.append(shortfall)
     
-Constraints.append(Q*0.5 - sum(CG_prod))
+Constraints.append(Q*0.5 - min(CG_prod_total))
 Constraints = list(Constraints)
     
 # Returns list of objectives, Constraints
-biomass_cost = (CG_cultivation_capex + CG_cultivation_opex*len(years))
+biomass_cost = CG_cultivation_capex + CG_cultivation_opex*len(years)
 shortfall_cost = Z
 
 # return [biomass_cost, np.sum(v[0:num_c])], Z, Constraints ##
