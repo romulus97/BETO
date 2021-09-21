@@ -113,8 +113,8 @@ for i in range(0,len(districts)):
 # Identify quota as % of maximum theoretical production
 import multiyear_quota
 p=.25
-Q, Q_min= multiyear_quota.QD(districts,locations)
-quota = np.mean(Q)*p #quota in biomass in kilograms as opposed to ethanol
+Q_min, Q_series = multiyear_quota.QD(districts,locations)
+quota = Q_min*p #quota in biomass in kilograms as opposed to ethanol
 
 # FIX QUOTA TO BE MULTIYEAR
 
@@ -161,13 +161,6 @@ def simulate(
     CG_prod_total = np.zeros((len(years), 1))
     CG_ethanol_total = np.zeros((len(years),1))
     # CS_travel_opex = np.zeros((len(years, 1)))
-    
-    # CS_flow_matrix = np.zeros((len(hubs),len(locations)))
-    # CS_D2H_prod = np.zeros((num_c,num_h))
-    # CS_flow = 0
-    # CS_refinery_kg = 0
-    # CS_ethanol = np.zeros((num_l,1))
-    # CS_refinery_capex = 0
 
     # Capital costs (need to expand)
     L = np.array(LC) #$/acre
@@ -186,102 +179,16 @@ def simulate(
         i = years.index(year)
         Y = C_Y[:,i]
         
-        # Constraints = [] # constraints
-        
-        # Per ha values (need to expand) # this is where we would put in code from Jack 
-        
-        ##############################
-        # Cultivation and Harvesting
-    
-        # Operating costs (need to expand)
-        #harvesting = 38.31*ha_to_acre # $ per ha
-        
-        # d2h_map = np.array(D2H_map)
-        # Automatic flow to pre-processing hub
-        # CS_D2H_prod = d2h_map * np.transpose(np.array([(CS_per_ha * v[0:num_c])]*num_h)) #kg = kg*ha/ha
         CG_prod = np.sum(v[0:num_c]*Y)
         CG_prod_total[i] = CG_prod
         
-        # CS_cultivation_opex += np.sum(CS_per_ha*v[0:num_c]*(lb_to_kg)*(1/1500)*0.50*D2H)
-       
-        # Cultivation constraints (land limits) #PUT OUTSIDE OF LOOP 
-        # for i in range(0,len(LC)):
-        #     Constraints.append(vars[i] - LL[i] - 5) #allow some slack in DVs
-            
-        # LL_cons = np.subtract(np.subtract(v[0:len(LC)], LL), 5)
-        # Constraints.extend(LL_cons.tolist())
-       
-        ################################
-            
-        # ref = (len(LC) + (len(hubs) - 1)*len(locations) + (len(locations) - 1)) + 1
-       
-        # # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-        # CS_flow_matrix = v[num_c:].reshape((num_h,num_l)) #kg
-        
-        # Travel costs in bale-miles
-        # CS_travel_opex = np.sum(DM*CS_flow_matrix*((lb_to_kg)*(1/1500)*0.50)) # km*kg*
-        
-        # #Flow to refinery
-        # for j in range(0,len(hubs)):
-            
-        #     for k in range(0,len(locations)):
-            
-        #         # Mass transfer (1Ms kg of CS) from hub 'j' to hub 'k'
-        #         CS_flow_matrix[j,k] = CS_flow_matrix[j,k] + vars[len(LC) + j*len(locations) + k] 
-                
-        #         # Travel costs in bale-miles
-        #         CS_travel_opex += DM[j,k]*CS_flow_matrix[j,k]*(lb_to_kg)*(1/1500)*0.50 
-    
-        #for j in range(0,len(hubs)):
-        # P = np.array(CS_C2H_prod)
-        # F = np.array(CS_flow_matrix)
-       
-        # Hubs collect biomass from counties
-        # CS_hub_kg = np.sum(CS_D2H_prod, axis=0) #kg
-        
-        # Transportation constraints (all delivery from hub 'j' must be <= mass produced)
-        # CS_flow = np.sum(CS_flow_matrix, axis=1) #kg
-        # flow_constraints = CS_flow - CS_hub_kg - 5 #allow some slack in DVs #kg
-        
-        # for j in range(0,len(hubs)):
-        #     Constraints.append(flow_constraints[j]) 
-        
-        # Constraints.extend(flow_constraints.tolist())
-        
+          
         ###############################
         # Refinery
        
-        #for k in range(0,len(locations)):
-              
-        # Find total mass received at hub 'l'
-        # CS_refinery_kg = np.sum(CS_flow_matrix, axis=0) #kg
-        
-        # # Only allow plants above certain scale
-        # filter_flows = np.array(list(map(int,(CS_refinery_kg/(5563*142))>1000)))
-        # new_kg = filter_flows*CS_refinery_kg
-        # scale = filter_flows*(CS_refinery_kg/(5563*142))
-                
         # Ethanol produced at refinery at hub 'l'
         CG_ethanol = CS_processing.sim(CG_prod) #L
         CG_ethanol_total[i] = CG_ethanol
-        # scale = CS_refinery_kg/(5563*142)
-        
-        # for k in range(0,len(locations)):
-            # if scale[k] < 1000:
-            #     CS_refinery_capex += 25000000*scale[k]
-            # elif scale[k] >= 1000 and scale[k] < 5000:
-            #     CS_refinery_capex += 12500000*scale[k]
-            # elif scale[k] >= 5000 and scale[k] < 10000:
-            #     CS_refinery_capex += 7500000*scale[k]    
-            # else:
-            #     CS_refinery_capex += 500000*scale[k] 
-            
-    
-        # CS_refinery_capex = 400000000*(scale)**.6
-        
-        # Sets ethanol production quota (L)
-        # Constraints.append(Q - np.sum(CS_ethanol)-5) #L
-        # Constraints.append(sum(CS_ethanol)[0] - Q*1.05) #remove upper contraint 
         
         if (Q - CG_ethanol) < 0:
        
@@ -301,7 +208,6 @@ def simulate(
     min_shortfall = max(Z)
     return [biomass_cost, min_shortfall], Constraints ##
     
-#return [biomass_cost,   np.sum(v[0:num_c]), np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
 
 ####################################################################
@@ -333,7 +239,7 @@ problem.function = simulate
 algorithm = BorgMOEA(problem, epsilons=0.1)
 
 # Evaluate function # of times
-algorithm.run(50000)
+algorithm.run(5000)
 
 stop = time.time()
 elapsed = (stop - start)/60

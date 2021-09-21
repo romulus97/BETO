@@ -100,7 +100,7 @@ def QD (districts,locations):
     hubs = hubs
     
     years = range(1958,2021)
-    Q = []
+    Q_series = []
     
     ##############################
     # Cultivation and Harvesting
@@ -165,8 +165,8 @@ def QD (districts,locations):
         
         s = sum(CS_ethanol[:])
         # Q.append(s[0])
-        Q.append(sum(sum(CS_flow_matrix)))
-        Q_min = min(Q)
+        Q_series.append(sum(sum(CS_flow_matrix)))
+        Q_min = min(Q_series)
 
-    return Q_min,Q # 
+    return Q_min,Q_series # 
 
