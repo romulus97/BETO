@@ -11,12 +11,14 @@ def QD (districts,locations,p):
 
     # import district level data
     df_geo = pd.read_excel('combined_pivot_excel_electricity.xlsx',header=0, engine='openpyxl') #contains every eg_district code 
+    df_eth = pd.read_excel('yearly_ethanol.xlsx',header=0, engine='openpyxl') #contains every eg_district code 
     
     districts = list(df_geo['STASD_N']) # list of ag_district code
     land_costs = df_geo.loc[:,'land_costs-$/ha'].values # $ per ha
     land_limits = df_geo['land_limits_ha'].values # county ag production area in acres
     cost = list(df_geo['CG_cost_per_ha'])
     C_yield = df_geo.iloc[:,8:].values  # Corn Grain yield as kg/ha
+    L_ethanol = df_eth.iloc[:,8:].values 
     
     #specify grouping
     groups = 20
@@ -98,8 +100,8 @@ def QD (districts,locations,p):
         CG_refinery_kg = 0
         CG_ethanol = np.zeros((len(locations),1))
         
-        i = years.index(year)
-        Y = C_yield[:,i]
+        b = years.index(year)
+        Y = C_yield[:,b]
     
         ##############################
         # Cultivation and Harvesting
@@ -108,6 +110,7 @@ def QD (districts,locations,p):
 
             # Automatic flow to pre-processing hub
             CG_D2H_prod[i,:] = D2H_map[i,:]*Y[i]*V[i]
+            
         
         # Flow to refinery
         for j in range(0,len(hubs)):
@@ -128,7 +131,7 @@ def QD (districts,locations,p):
             CG_refinery_kg = sum(CG_flow_matrix[:,k])
             
             # Ethanol produced at refinery at hub 'l'
-            CG_ethanol[k] = CS_processing.sim(CG_refinery_kg)
+            CG_ethanol[k] = CS_processing.sim(CG_refinery_kg)  ##Buraya l-ethanol gelecek direk excel e alinca okutacagim 
     
     ###############################
     # Upper bound hub kgs

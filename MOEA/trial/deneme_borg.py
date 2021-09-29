@@ -5,6 +5,7 @@ Created on Fri Jul  3 16:20:20 2020
 """
 
 from platypus import GDE3, Problem, Real
+from pyborg import BorgMOEA
 import random
 from random import randint
 import pandas as pd
@@ -202,10 +203,7 @@ problem.constraints[:] = "<=0"
 problem.function = simulate
 
 # What algorithm?
-algorithm = GDE3(
-    problem=problem,
-    population_size=250,
-    )
+algorithm = BorgMOEA(problem, epsilons=0.1)
 
 # Evaluate function # of times
 algorithm.run(500000)
