@@ -1,0 +1,44 @@
+1.4996253331502278 minutes
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@n2f2-6>
+Subject: Job 148433: <python platypus_BETO_district_multiyear_borg.py> in cluster <henry2> Done
+
+Job <python platypus_BETO_district_multiyear_borg.py> was submitted from host <login01> by user <eari> in cluster <henry2> at Tue Oct  5 16:17:17 2021
+Job was executed on host(s) <8*n2f2-6>, in queue <single_chassis>, as user <eari> in cluster <henry2> at Tue Oct  5 16:17:23 2021
+</home/eari> was used as the home directory.
+</share/infews/eari/trial> was used as the working directory.
+Started at Tue Oct  5 16:17:23 2021
+Terminated at Tue Oct  5 16:18:56 2021
+Results reported at Tue Oct  5 16:18:56 2021
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python platypus_BETO_district_multiyear_borg.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   90.60 sec.
+    Max Memory :                                 52.11 MB
+    Average Memory :                             51.91 MB
+    Total Requested Memory :                     30720.00 MB
+    Delta Memory :                               30667.89 MB
+    Max Swap :                                   9 MB
+    Max Processes :                              3
+    Max Threads :                                4
+    Run time :                                   102 sec.
+    Turnaround time :                            99 sec.
+
+The output (if any) is above this job summary.
+
+
+
+PS:
+
+Read file <err.148433> for stderr output of this job.
+
