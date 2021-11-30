@@ -41,7 +41,7 @@ def sim(CG_refinery_kg):
     # df_new = df_corn.iloc[:,range(1,8)].copy()
     # df_new = pd.concat([df_new,new_df_transpose],axis=1)    
     # df_new.to_excel('yearly_ethanol.xlsx',index=False)
-    return L_ethanol   
+    return kg_ethanol   
     
     
     
