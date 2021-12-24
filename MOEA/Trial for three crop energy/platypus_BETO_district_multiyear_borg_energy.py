@@ -69,20 +69,20 @@ marginal_land_costs = df_geo_grass.loc[:,'land_costs-$/ha'].values # $ per ha
 marginal_land_limits = df_geo_grass['land_limits_ha'].values # county ag production area in acres
 
 
-years = range(1960,2021)
+years = range(1996,2021)
 listyears =[]
 
 for year in years :
     listyears.append(str(year))
 
 # Corn Grain yield
-C_yield = df_geo_corn.iloc[:,13:].values  #yield in bushels per acre
+C_yield = df_geo_corn.loc[:,1996:].values  #yield in bushels per acre
 
 # Soybean yield
-S_yield = df_geo_soy.iloc[:,12:].values  #yield in bushels per acre
+S_yield = df_geo_soy.loc[:,1996:].values  #yield in bushels per acre
 
 # Grass yield
-G_yield = df_geo_grass.iloc[:,13:].values  #yield in bushels per acre
+G_yield = df_geo_grass.loc[:,1996:].values  #yield in bushels per acre
 
 
 ########################################################################
@@ -206,13 +206,14 @@ def simulate(
     G_energy_total = np.zeros((len(years),1))
     
     Energy_total = np.zeros((len(years),1))
+    vars = np.zeros(214,)
 
     # Capital costs (need to expand)
     L = np.array(LC) #$/acre
     ML = np.array(MLC)
-    vc = (np.array(vars))/2
-    vs = (np.array(vars))/2
-    v = (np.array(vars))
+    vc = (np.array(vars[0:num_c]))/2
+    vs = (np.array(vars[0:num_c]))/2
+    v = (np.array(vars[num_c:]))
     
     # VC = vars[:107]
     # VG = vars[107:]
@@ -302,15 +303,17 @@ def simulate(
     
 #return [biomass_cost,   np.sum(v[0:num_c]), np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
-
+df_total_cost = pd.read_excel('total_land_cost.xlsx',header=0, engine='openpyxl') #contains every eg_district code 
+total_land_cost = list(df_total_cost['land_costs-$/ha'])
+total_land_limit = list(df_total_cost['land_limits_ha'])
 
 ####################################################################
 #########           MOEA EXECUTION          ########################
 ####################################################################
 
 # Number of variables, constraints, objectives
-g = np.size(land_costs)
-num_variables = g 
+g = np.size(total_land_cost)
+num_variables = g # + np.size(marginal_land_costs)
 num_constraints = 2 #+ g   #must match to contraints
 num_objs = 3
 
@@ -321,8 +324,8 @@ num_objs = 3
 
 problem = Problem(num_variables,num_objs,num_constraints)
 
-for i in range(0,np.size(land_costs)):
-    problem.types[i] = Real(0,land_limits[i]+5)
+for i in range(0,np.size(total_land_cost)):
+    problem.types[i] = Real(0,total_land_limit[i]+5)
 # problem.types[g:] = Real(0,UB+5)
 # problem.types[g:] = Real(0,UB*100)
 problem.constraints[:] = "<=0"
@@ -335,7 +338,7 @@ problem.function = simulate
 algorithm = BorgMOEA(problem, epsilons=0.1)
 
 # Evaluate function # of times
-algorithm.run(100000)
+algorithm.run(100)
 
 stop = time.time()
 elapsed = (stop - start)/60

@@ -53,9 +53,9 @@ def QD (districts,locations):
     
     # # Corn Stover
     # C_yield = df_geo['yield_bpa'].values  #yield in bushels per acre
-    C_yield = df_geo.iloc[:,13:].values
-    S_yield = df_geo_s.iloc[:,12:].values
-    G_yield = df_geo_g.iloc[:,13:].values
+    C_yield = df_geo.loc[:,1996:].values
+    S_yield = df_geo_s.loc[:,1996:].values
+    G_yield = df_geo_g.loc[:,1996:].values
     
     ########################################################################
     #########        PRE-PROCESSING       ##################################
@@ -122,7 +122,7 @@ def QD (districts,locations):
     locations = locations #possible location of biorefineries,
     hubs = hubs
     
-    years = range(1960,2021)
+    years = range(1996,2021)
     Q_series = []
     
     ##############################

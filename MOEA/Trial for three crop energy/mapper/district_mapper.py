@@ -113,17 +113,19 @@ for i in range(0,len(l)):
     l[i] = 2*(l[i] - min(l))/span
 
 
-fig = plt.figure()
+fig = plt.figure(figsize=(5,5))
 ax = fig.add_subplot(projection='3d')
 
 p = ax.scatter(r,t,l, c=r, s=l, cmap='hot',linewidth=1, edgecolor='black')
-fig.colorbar(p, ax=ax)
+# fig.colorbar(p, ax=ax)
+fig.colorbar(p, ax=ax, location='left', shrink=0.6)
 # ax.scatter(r,t,l,)
 
 # plt.figure()
 # plt.scatter(r,t)
-# plt.xlabel('Biofinery Capex $B',fontweight='bold',fontsize=12)
-# plt.ylabel('Transporation Opex $B',fontweight='bold',fontsize=12)
+ax.set_xlabel('min_energy_shortfall',fontweight='bold', fontsize=10)
+ax.set_ylabel('energy_changes',fontweight='bold',fontsize=10)
+ax.set_zlabel('cost',fontweight='bold',fontsize=10)
 
 plt.savefig('pareto.tiff',dpi = 330)
     
