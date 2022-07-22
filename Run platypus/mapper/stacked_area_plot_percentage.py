@@ -156,8 +156,8 @@ for year in years:
         
 df_O.columns = ['cost','max_energy_shortfall','min_GHG_emission']
 
-#sorting = df_O.sort_values(by='max_energy_shortfall', ascending=True)
-#sorting = df_O.sort_values(by='min_GHG_emission', ascending=True)
+# sorting = df_O.sort_values(by='max_energy_shortfall', ascending=True)
+# sorting = df_O.sort_values(by='min_GHG_emission', ascending=True)
 sorting = df_O.sort_values(by='cost', ascending=True)
 
 
@@ -192,8 +192,8 @@ ax = fig.add_subplot(1,1,1)
 
 color_map = ["#023e8a", "#ffbe0b", "#d90429"]
 ax.stackplot(x,CCC, GGG, AAA, labels = ['corn/soy','grass','algae'], colors = color_map)
-plt.legend(loc='upper right',fontsize=35, bbox_to_anchor=(1.1, 1))
-plt.ylabel('Produced MJ (%)',fontsize=35)
+# plt.legend(loc='upper right',fontsize=35, bbox_to_anchor=(1.1, 1))
+plt.ylabel('% of Total Fuel Prduction',fontsize=35)
 plt.xticks(np.arange(0, 8484,step=1000), rotation=40, fontsize=35)
 plt.yticks(fontsize=35)
 
@@ -201,7 +201,7 @@ plt.yticks(fontsize=35)
 m = len(df_O)	
 p = 0.1	
 q = 0.5
-z = 0.98
+z = 0.9
 n = m*p 
 k = m*q
 r = m*z 	
@@ -210,9 +210,9 @@ plt.axvline(x=(int(n)),color='black',linewidth=4)
 plt.axvline(x=(int(k)),color='black',linewidth=4)
 plt.axvline(x=(int(r)),color='black',linewidth=4)
 
-#plt.title('Sorted Quota Shortfall Solution',fontsize=35)
-#plt.title(r'Sorted GHG Intensity (tons $CO_{2}$) Solution)',fontsize=35)
-plt.title('Sorted Cost Solution',fontsize=35)
+# plt.title('Quota Shortfall (MJ)',fontsize=35)
+# plt.title(r'GHG Intensity (tons $CO_{2}$))',fontsize=35)
+plt.title('Per Unit Cost ($/MJ)',fontsize=35)
 
 
 

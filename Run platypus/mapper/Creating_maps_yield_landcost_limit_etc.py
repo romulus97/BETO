@@ -116,7 +116,7 @@ df_decision_variables= pd.read_csv('Decision_Variables_borg_two_crop_trialdistri
 # tc = land_limits
 # tc = marginal_LC
 # tc = marginal_land_limits
-tc = electricity_
+tc = electricity
 
 t = tc
 to = t  # .iloc[1:]
@@ -144,8 +144,7 @@ db.plot(column= to,
         edgecolor='black', 
         linewidth=0.8, 
         alpha=0.95, 
-        legend=True,
-        legend_kwds={"loc": 4},
+        legend=False,
         ax=ax
         )
 

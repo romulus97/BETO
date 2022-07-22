@@ -28,8 +28,10 @@ df_geo_soy = pd.read_excel('combined_pivot_soy_excel_electricity.xlsx',header=0,
 df_geo_grass = pd.read_excel('combined_pivot_grass_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for grass (state, land cost, yield etc) 
 df_geo_algea = pd.read_excel('combined_pivot_algea_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for algae (state, land cost, yield etc)   
 
+
 df = pd.read_csv('AgD_48g_cords_cb.csv',header=0)
 years = range(1998,2014)
+
 crs = {'init':'epsg:4326'}
 
 geometry = [Point(xy) for xy in zip(df['Longitude'],df['Latitude'])]
@@ -42,6 +44,11 @@ state_map = state_map.to_crs(epsg=2163)
 district_map = gpd.read_file('shapefiles/AgD Corn belt.shp')
 district_map = district_map.to_crs(epsg=2163)
 district = list(district_map['STASD_N'])
+
+## GHG Emission from Power Sector 
+CO_emission = df_geo_corn["CO2 lbs/MJ"].values  # same for each crop type (CO2 emission from power sector )
+CO_em_power = CO_emission * 0.453592 *1000 # g/ MJ
+
 
 ## Yield 
 # Corn Grain yield
@@ -63,6 +70,9 @@ land_limits = df_geo_soy.loc[:,'land_limits_ha'].values
 marginal_LC = df_geo_grass.loc[:,'land_costs-$/ha'].values # $ per ha
 marginal_land_limits = df_geo_grass.loc[:,'land_limits_ha'].values
 electricity = df_geo_corn.loc[:,'Electricity Price $/MJ'].values
+
+
+
 
 #Mean Yield Calculation
 total_yield_c = np.zeros((len(district))) # creating empty list for 106 total yield data set 
@@ -106,9 +116,9 @@ for dist in district:
 
 
 
-df_decision_variables= pd.read_csv('Decision_Variables_borg_two_crop_trialdistrict.csv',header=0)
 
-tc = dist_mean_c
+## OPTIONS
+# tc = dist_mean_c
 # tc = dist_mean_s
 # tc = dist_mean_g
 # tc = dist_mean_a
@@ -117,6 +127,7 @@ tc = dist_mean_c
 # tc = marginal_LC
 # tc = marginal_land_limits
 # tc = electricity
+tc = CO_em_power
 
 t = tc
 to = t  # .iloc[1:]
@@ -136,44 +147,28 @@ f, ax = plt.subplots(1, figsize=(9, 9))
 
 state_map.plot(ax=ax,color='gray',alpha=0.6,edgecolor='black',linewidth=0.8)
 
-import matplotlib.colors as colors
-
-# normalize color
-vmin, vmax, vcenter = 1300,460000, 50000
-norm = colors.TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
-
-# create a normalized colorbar
-cmap = 'cool'
-cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-
 
 db.plot(column= to, 
-        cmap= 'cool', 
-        # scheme='MaximumBreaks',
-        k=20, 
+        cmap= 'cool',
         edgecolor='black', 
-        linewidth=0.9, 
-        alpha=0.9, 
-        # legend=True,
-        # legend_kwds={"shrink": 0.75, "pad": 0.09},
-        norm=norm,
-        rasterized = True,
+        linewidth=0.8, 
+        alpha=0.95, 
+        legend=True,
         ax=ax
         )
 
-
-
-
-# cbar = plt.colorbar(ScalarMappable(norm=normalize, cmap='cool'), ax=ax, shrink=0.75, pad=0.09)
-# cbar.locator_params(nbins=20)
-
-plt.colorbar(cbar, ax=ax, extend ='both', shrink = 0.6,)
+# contextily.add_basemap(ax, 
+#                         crs=db.crs, 
+#                         source=contextily.providers.Stamen.TerrainBackground
+#                       )
 ax.set_axis_off()
 ax.set_box_aspect(1)
 ax.set_xlim(-750000,2000000)
 ax.set_ylim([-2000000,500000])
 plt.axis('off')
 
+print(min(tc))
+print(max(tc))
 #plt.savefig('max_energy_shortfall_c.tiff',dpi=300)   # idx1
 #plt.savefig('min_GHG_emission_a.tiff',dpi=300)         # idx2
 # plt.savefig('cost_c.tiff',dpi=300)                   # idx3 

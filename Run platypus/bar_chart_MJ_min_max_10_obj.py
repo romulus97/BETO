@@ -134,9 +134,9 @@ for year in years:
 df_O.columns = ['cost','max_energy_shortfall','min_GHG_emission']
 
 
-#sorting = df_O.sort_values(by='max_energy_shortfall', ascending=False)
-#sorting = df_O.sort_values(by='min_GHG_emission', ascending=False)
-sorting = df_O.sort_values(by='cost', ascending=False)
+sorting = df_O.sort_values(by='max_energy_shortfall', ascending=False)
+# sorting = df_O.sort_values(by='min_GHG_emission', ascending=False)
+# sorting = df_O.sort_values(by='cost', ascending=False)
 
 
 # MIN SOLUTION 
@@ -169,22 +169,22 @@ for ind in ind_min_cost:
     
     index = [str (b) for b in ind_min_cost]
     
-    #ax.set_title('Minimum Quota Shortfall Solution',fontsize=15)
-    #ax.set_title('Minimum GHG Intensity (tons $CO_{2}$) Solution',fontsize=15)
-    ax.set_title('Minimum Cost Solution',fontsize=15)
+    ax.set_title('Minimum Quota Shortfall (MJ) Solution',fontsize=15)
+    # ax.set_title('Minimum GHG Intensity (tons $CO_{2}$/MJ) Solution',fontsize=15)
+    # ax.set_title('Minimum Cost ($/MJ) Solution',fontsize=15)
     
     
     # ax.legend(bbox_to_anchor=(1.02, 1.05),loc=2, prop={'size': 7})
     
-    leg1 = mpatches.Patch(color='#023e8a', label='Produced MJ \n from Corn/soy')
-    leg2 = mpatches.Patch(color='#ffbe0b', label='Produced MJ \n from Grass')
-    leg3 = mpatches.Patch(color='#d90429', label='Produced MJ \n from Algae')
-    fig.legend(handles=[leg1,leg2,leg3],loc='center left', bbox_to_anchor=(1.04, 0.5), bbox_transform=ax.transAxes, borderpad=0.8)
+    # leg1 = mpatches.Patch(color='#023e8a', label='Produced MJ \n from Corn/soy')
+    # leg2 = mpatches.Patch(color='#ffbe0b', label='Produced MJ \n from Grass')
+    # leg3 = mpatches.Patch(color='#d90429', label='Produced MJ \n from Algae')
+    # fig.legend(handles=[leg1,leg2,leg3],loc='center left', bbox_to_anchor=(1.04, 0.5), bbox_transform=ax.transAxes, borderpad=0.8)
     
     
-    #fig.savefig(index[a] +' MJ_bar_chart_min_energy_shortfall.png',bbox_inches='tight', dpi=300)
-    #fig.savefig(index[a] +' MJ_bar_chart_min_GHG_emission.png',bbox_inches='tight', dpi=300)
-    fig.savefig(index[a] +' MJ_bar_chart_min_cost.png',bbox_inches='tight', dpi=300)
+    fig.savefig(index[a] +' MJ_bar_chart_min_energy_shortfall.png',bbox_inches='tight', dpi=300)
+    # fig.savefig(index[a] +' MJ_bar_chart_min_GHG_emission.png',bbox_inches='tight', dpi=300)
+    # fig.savefig(index[a] +' MJ_bar_chart_min_cost.png',bbox_inches='tight', dpi=300)
     
     plt.show()     
 
@@ -219,21 +219,26 @@ for indm in ind_max_cost:
     
     # ax.set_title(index[am] +' Maximum Quota Shortfall Solution')
     
-    #ax.set_title('Maximum Quota Shortfall Solution',fontsize=15)
-    #ax.set_title('Maximum GHG Intensity (tons $CO_{2}$) Solution',fontsize=15)
-    ax.set_title('Maximum cost solution',fontsize=15)
+    ax.set_title('Maximum Quota Shortfall (MJ) Solution',fontsize=15)
+    # ax.set_title('Maximum GHG Intensity (tons $CO_{2}$/MJ) Solution',fontsize=15)
+    # ax.set_title('Maximum cost ($/MJ) solution',fontsize=15)
     
     
     # ax.legend(bbox_to_anchor=(1.02, 1.05),loc=2, prop={'size': 7})
     
-    leg1 = mpatches.Patch(color='#023e8a', label='Produced MJ \n from Corn/soy')
-    leg2 = mpatches.Patch(color='#ffbe0b', label='Produced MJ \n from Grass')
-    leg3 = mpatches.Patch(color='#d90429', label='Produced MJ \n from Algae')
-    fig.legend(handles=[leg1,leg2,leg3],loc='center left', bbox_to_anchor=(1.04, 0.5), bbox_transform=ax.transAxes, borderpad=0.8)
+    # leg1 = mpatches.Patch(color='#023e8a', label='Produced MJ \n from Corn/soy')
+    # leg2 = mpatches.Patch(color='#ffbe0b', label='Produced MJ \n from Grass')
+    # leg3 = mpatches.Patch(color='#d90429', label='Produced MJ \n from Algae')
+    
+    # leg1 = mpatches.Patch(color='#023e8a', label='Produced MJ from Corn/soy')
+    # leg2 = mpatches.Patch(color='#ffbe0b', label='Produced MJ from Grass')
+    # leg3 = mpatches.Patch(color='#d90429', label='Produced MJ from Algae')
+    
+    # fig.legend(handles=[leg1,leg2,leg3],loc='center left', bbox_to_anchor=(1.04, 0.5), bbox_transform=ax.transAxes, borderpad=0.8)
     
     
-    #fig.savefig(' MJ_bar_chart_max_energy_shortfall.png',bbox_inches='tight', dpi=300)
-    #fig.savefig(index[am] +' MJ_bar_chart_max_GHG_emission.png',bbox_inches='tight', dpi=300)
-    fig.savefig(index[am] +' MJ_bar_chart_max_cost.png',bbox_inches='tight', dpi=300)
+    fig.savefig(' MJ_bar_chart_max_energy_shortfall.png',bbox_inches='tight', dpi=300)
+    # fig.savefig(index[am] +' MJ_bar_chart_max_GHG_emission.png',bbox_inches='tight', dpi=300)
+    # fig.savefig(index[am] +' MJ_bar_chart_max_cost.png',bbox_inches='tight', dpi=300)
     
     plt.show()    

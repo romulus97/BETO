@@ -44,19 +44,30 @@ S_ha = np.transpose(df_ha).iloc[1:108].values # used hectare for soy
 G_ha = np.transpose(df_ha).iloc[108:215].values # used hectare for grass
 A_ha = np.transpose(df_ha).iloc[215:].values # used hectare for algae
 
-## GHG
-#Cultivation GHG emission 
-GHG_cult_corn = list(df_yield_corn['GHG(g CO2e/ha)']) # corn_GHG_per_ha
-GHG_cult_soy = list(df_yield_soy['soy_GHG(g CO2e/ha)'])   # soy_GHG_per_ha
-GHG_cult_soy_kg = list(df_yield_soy['soy_GHG(g CO2e/kg/yr)'])   # soy_GHG_per_kg/yr
-GHG_cult_grass = list(df_geo_grass['GHG(g CO2e/ha)'])  # grass_GHG_per_ha
-GHG_cult_algal = list(df_geo_algea['GHG(g CO2e/ha)'])  # algae_GHG_per_ha
 
-# #Process GHG emission
-# GHG_proc_corn = list(df_yield_corn['GHG_proc(g CO2e/kg/yr)']) # corn_GHG_per_kg/yr
-# GHG_proc_soy = list(df_yield_soy['soy_GHG_proc(g CO2e/kg/yr)'])   # soy_GHG_per_kg/yr
-# GHG_proc_grass = list(df_geo_grass['GHG_proc_(g CO2e/kg/yr)'])  # grass_cost_per_kg/yr
-# GHG_proc_algal = list(df_geo_algea['GHG_proc_(g CO2e/kg/yr)'])  # algae_cost_per_kg/yr
+## GHG Emission from Power Sector 
+CO_emission = df_yield_corn["CO2 lbs/MJ"].values  # same for each crop type (CO2 emission from power sector )
+CO_em_power = CO_emission * 0.453592 *1000 # g/ MJ
+
+
+## Energy 
+Unit_el_price = df_yield_corn["Electricity Price $/MJ"].values  # same for each crop type (CO2 emission from power sector )
+
+
+
+# ## GHG
+# #Cultivation GHG emission 
+# GHG_cult_corn = list(df_yield_corn['GHG(g CO2e/ha)']) # corn_GHG_per_ha
+# GHG_cult_soy = list(df_yield_soy['soy_GHG(g CO2e/ha)'])   # soy_GHG_per_ha
+# GHG_cult_soy_kg = list(df_yield_soy['soy_GHG(g CO2e/kg/yr)'])   # soy_GHG_per_kg/yr
+# GHG_cult_grass = list(df_geo_grass['GHG(g CO2e/ha)'])  # grass_GHG_per_ha
+# GHG_cult_algal = list(df_geo_algea['GHG(g CO2e/ha)'])  # algae_GHG_per_ha
+
+# # #Process GHG emission
+# # GHG_proc_corn = list(df_yield_corn['GHG_proc(g CO2e/kg/yr)']) # corn_GHG_per_kg/yr
+# # GHG_proc_soy = list(df_yield_soy['soy_GHG_proc(g CO2e/kg/yr)'])   # soy_GHG_per_kg/yr
+# # GHG_proc_grass = list(df_geo_grass['GHG_proc_(g CO2e/kg/yr)'])  # grass_cost_per_kg/yr
+# # GHG_proc_algal = list(df_geo_algea['GHG_proc_(g CO2e/kg/yr)'])  # algae_cost_per_kg/yr
 
 
 corn_GHG = np.zeros((len(district),len(df_ha)))
@@ -64,15 +75,15 @@ soy_GHG = np.zeros((len(district),len(df_ha)))
 grass_GHG = np.zeros((len(district),len(df_ha)))
 algae_GHG = np.zeros((len(district),len(df_ha)))
 
-for sol in solutions:  
-    GHG_emission_CG_cult = C_ha[:,sol]*GHG_cult_corn #  g CO2 emission from corn cultivation 
-    corn_GHG[:,sol]=GHG_emission_CG_cult
-    GHG_emission_S_cult = S_ha[:,sol]*GHG_cult_soy #  g CO2 emission from soy cultivation
-    soy_GHG[:,sol]=GHG_emission_S_cult
-    GHG_emission_G_cult = G_ha[:,sol]*GHG_cult_grass #  g CO2 emission from grass cultivation
-    grass_GHG[:,sol]=GHG_emission_S_cult
-    GHG_emission_A_cult = A_ha[:,sol]*GHG_cult_algal #  g CO2 emission from algae cultivation
-    algae_GHG[:,sol]=GHG_emission_S_cult
+# for sol in solutions:  
+#     GHG_emission_CG_cult = C_ha[:,sol]*GHG_cult_corn #  g CO2 emission from corn cultivation 
+#     corn_GHG[:,sol]=GHG_emission_CG_cult
+#     GHG_emission_S_cult = S_ha[:,sol]*GHG_cult_soy #  g CO2 emission from soy cultivation
+#     soy_GHG[:,sol]=GHG_emission_S_cult
+#     GHG_emission_G_cult = G_ha[:,sol]*GHG_cult_grass #  g CO2 emission from grass cultivation
+#     grass_GHG[:,sol]=GHG_emission_S_cult
+#     GHG_emission_A_cult = A_ha[:,sol]*GHG_cult_algal #  g CO2 emission from algae cultivation
+#     algae_GHG[:,sol]=GHG_emission_S_cult
 
 
 ## Yield 
@@ -193,35 +204,41 @@ for sol in solutions:
         
 # R2 calculation         
 
-R2_acrage_vs_cost = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_mgcost = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_macost = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_limit = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_mglimit = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_malimit = pd.DataFrame(np.zeros(len(df_ha)))
+R2_acrage_vs_cost = np.zeros(len(df_ha))
+R2_acrage_vs_mgcost = np.zeros(len(df_ha))
+R2_acrage_vs_macost = np.zeros(len(df_ha))
+R2_acrage_vs_limit = np.zeros(len(df_ha))
+R2_acrage_vs_mglimit = np.zeros(len(df_ha))
+R2_acrage_vs_malimit = np.zeros(len(df_ha))
 
-R2_acrage_vs_cyield = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_syield = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_gyield = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_ayield = pd.DataFrame(np.zeros(len(df_ha)))
+R2_acrage_vs_cyield = np.zeros(len(df_ha))
+R2_acrage_vs_syield = np.zeros(len(df_ha))
+R2_acrage_vs_gyield = np.zeros(len(df_ha))
+R2_acrage_vs_ayield = np.zeros(len(df_ha))
 
-R2_acrage_vs_electricity = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_selectricity = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_gelectricity = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_aelectricity = pd.DataFrame(np.zeros(len(df_ha)))
+R2_acrage_vs_electricity = np.zeros(len(df_ha))
+R2_acrage_vs_selectricity = np.zeros(len(df_ha))
+R2_acrage_vs_gelectricity = np.zeros(len(df_ha))
+R2_acrage_vs_aelectricity = np.zeros(len(df_ha))
 
-sol_reg_com =  np.zeros((5,len(df_ha)))
+sol_reg_sign = np.zeros(len(df_ha))
+sol_reg_sign_s = np.zeros(len(df_ha))
+sol_reg_sign_g = np.zeros(len(df_ha))
+sol_reg_sign_a = np.zeros(len(df_ha))
 
-R2_acrage_vs_cult_GHG = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_scult_GHG = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_gcult_GHG = pd.DataFrame(np.zeros(len(df_ha)))
-R2_acrage_vs_acult_GHG = pd.DataFrame(np.zeros(len(df_ha)))
+R2_acrage_vs_cult_GHG = np.zeros(len(df_ha))
+R2_acrage_vs_scult_GHG = np.zeros(len(df_ha))
+R2_acrage_vs_gcult_GHG = np.zeros(len(df_ha))
+R2_acrage_vs_acult_GHG = np.zeros(len(df_ha))
 
 
 df_reg['land_cost'] = land_cost
 df_reg['land_limits'] = land_limits
 df_reg['marginal_land_cost'] = marginal_LC
 df_reg['marginal_land_limits'] = marginal_land_limits
+
+df_reg['GHG_emission_power_sector'] = CO_em_power
+df_reg['Unit Electricity price ($/MJ)'] = Unit_el_price
 
 df_reg['corn_yield'] =dist_mean_c
 df_reg['soy_yield'] =dist_mean_s
@@ -235,54 +252,64 @@ df_reg['algae_electricity_cost'] = A_el
 
 
 #### GHG
-## Corn acrage vs GHG
+# ## Corn acrage vs GHG
+# for sol in solutions:
+#     df_reg['corn_acrage'] = C_ha[:,sol]
+#     df_reg['corn_cult_GHG'] = corn_GHG[:,sol]
+    
+#     y = np.array(df_reg['corn_cult_GHG'])
+#     X = np.array(df_reg['corn_acrage'])
+#     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2_acrage_vs_cult_GHG.loc[sol,:] = R2
+#     # print(linregress(X, y))
+
+
+## Corn acrage vs GHG form power system
 for sol in solutions:
     df_reg['corn_acrage'] = C_ha[:,sol]
-    df_reg['corn_cult_GHG'] = corn_GHG[:,sol]
     
-    y = np.array(df_reg['corn_cult_GHG'])
+    y = np.array(df_reg['GHG_emission_power_sector'])
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_cult_GHG.loc[sol,:] = R2
+    R2_acrage_vs_cult_GHG[sol] = R2
     # print(linregress(X, y))
-
-
 
 
 ## Soy acrage vs GHG
 for sol in solutions:
     df_reg['corn_acrage'] = C_ha[:,sol]
-    df_reg['soy_cult_GHG'] = soy_GHG[:,sol]
+
     
-    y = np.array(df_reg['soy_cult_GHG'])
+    y = np.array(df_reg['GHG_emission_power_sector'])
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_scult_GHG.loc[sol,:] = R2
+    R2_acrage_vs_scult_GHG[sol] = R2
     
     
 ## Grass acrage vs GHG
 for sol in solutions:
     df_reg['grass_acrage'] = G_ha[:,sol]
-    df_reg['grass_cult_GHG'] = grass_GHG[:,sol]
+
     
-    y = np.array(df_reg['grass_cult_GHG'])
+    y = np.array(df_reg['GHG_emission_power_sector'])
     X = np.array(df_reg['grass_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_gcult_GHG.loc[sol,:] = R2
+    R2_acrage_vs_gcult_GHG[sol] = R2
         
 ## Algae acrage vs GHG
 for sol in solutions:
     df_reg['algae_acrage'] = A_ha[:,sol]
-    df_reg['algae_cult_GHG'] = algae_GHG[:,sol]
+
     
-    y = np.array(df_reg['algae_cult_GHG'])
+    y = np.array(df_reg['GHG_emission_power_sector'])
     X = np.array(df_reg['algae_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_acult_GHG.loc[sol,:] = R2
+    R2_acrage_vs_acult_GHG[sol] = R2
 
 
 df_reg_R2['R2_acrage_vs_cult_GHG'] = R2_acrage_vs_cult_GHG
@@ -290,57 +317,139 @@ df_reg_R2['R2_acrage_vs_scult_GHG'] = R2_acrage_vs_scult_GHG
 df_reg_R2['R2_acrage_vs_gcult_GHG'] = R2_acrage_vs_gcult_GHG
 df_reg_R2['R2_acrage_vs_acult_GHG'] = R2_acrage_vs_acult_GHG
 
+# #### ELECTRICITY
+# ## Corn acrage vs electricity
+# for sol in solutions:
+#     df_reg['corn_acrage'] = C_ha[:,sol]
+    
+#     y = np.array(df_reg['corn_electricity_cost'])
+#     X = np.array(df_reg['corn_acrage'])
+#     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2_acrage_vs_electricity[sol] = R2
+#     sol_reg = scipy.stats.pearsonr(X,y) 
+#     sol_reg_p = sol_reg[0]
+#     sol_reg_sign[sol]= sol_reg_p
+
+
+# ## Soy acrage vs electricity
+# for sol in solutions:
+#     df_reg['corn_acrage'] = C_ha[:,sol]
+    
+#     y = np.array(df_reg['soy_electricity_cost'])
+#     X = np.array(df_reg['corn_acrage'])
+#     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2_acrage_vs_selectricity[sol] = R2
+#     sol_reg_s = scipy.stats.pearsonr(X,y) 
+#     sol_reg_sp = sol_reg_s[0]
+#     sol_reg_sign_s[sol]= sol_reg_sp
+    
+    
+
+# ## Grass acrage vs electricity
+# for sol in solutions:
+#     df_reg['grass_acrage'] = G_ha[:,sol]
+    
+#     y = np.array(df_reg['grass_electricity_cost'])
+#     X = np.array(df_reg['grass_acrage'])
+#     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2_acrage_vs_gelectricity[sol] = R2
+#     sol_reg_g = scipy.stats.pearsonr(X,y) 
+#     sol_reg_gp = sol_reg_g[0]
+#     sol_reg_sign_g[sol]= sol_reg_gp
+    
+    
+# ## Algae acrage vs electricity
+# for sol in solutions:
+#     df_reg['algae_acrage'] = A_ha[:,sol]
+    
+#     y = np.array(df_reg['algae_electricity_cost'])
+#     X = np.array(df_reg['algae_acrage'])
+#     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
+#     R2_acrage_vs_aelectricity[sol] = R2
+#     sol_reg_a = scipy.stats.pearsonr(X,y) 
+#     sol_reg_ap = sol_reg_a[0]
+#     sol_reg_sign_a[sol]= sol_reg_ap
+
+
+# df_reg_R2['R2_acrage_vs_electricity'] = R2_acrage_vs_electricity
+# df_reg_R2['R2_acrage_vs_electricity_sign'] = sol_reg_sign
+# df_reg_R2['R2_acrage_vs_selectricity'] = R2_acrage_vs_selectricity
+# df_reg_R2['R2_acrage_vs_selectricity_sign'] = sol_reg_sign_s
+# df_reg_R2['R2_acrage_vs_gelectricity'] = R2_acrage_vs_gelectricity
+# df_reg_R2['R2_acrage_vs_gelectricity_sign'] = sol_reg_sign_g
+# df_reg_R2['R2_acrage_vs_aelectricity'] = R2_acrage_vs_aelectricity
+# df_reg_R2['R2_acrage_vs_aelectricity_sign'] = sol_reg_sign_a
+
+
 #### ELECTRICITY
 ## Corn acrage vs electricity
 for sol in solutions:
     df_reg['corn_acrage'] = C_ha[:,sol]
     
-    y = np.array(df_reg['corn_electricity_cost'])
+    y = np.array(df_reg['Unit Electricity price ($/MJ)'])
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_electricity.loc[sol,:] = R2
+    R2_acrage_vs_electricity[sol] = R2
     sol_reg = scipy.stats.pearsonr(X,y) 
+    sol_reg_p = sol_reg[0]
+    sol_reg_sign[sol]= sol_reg_p
 
 
 ## Soy acrage vs electricity
 for sol in solutions:
     df_reg['corn_acrage'] = C_ha[:,sol]
     
-    y = np.array(df_reg['soy_electricity_cost'])
+    y = np.array(df_reg['Unit Electricity price ($/MJ)'])
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_selectricity.loc[sol,:] = R2
-    
+    R2_acrage_vs_selectricity[sol] = R2
+    sol_reg_s = scipy.stats.pearsonr(X,y) 
+    sol_reg_sp = sol_reg_s[0]
+    sol_reg_sign_s[sol]= sol_reg_sp
     
 
 ## Grass acrage vs electricity
 for sol in solutions:
     df_reg['grass_acrage'] = G_ha[:,sol]
     
-    y = np.array(df_reg['grass_electricity_cost'])
+    y = np.array(df_reg['Unit Electricity price ($/MJ)'])
     X = np.array(df_reg['grass_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_gelectricity.loc[sol,:] = R2
+    R2_acrage_vs_gelectricity[sol] = R2
+    sol_reg_g = scipy.stats.pearsonr(X,y) 
+    sol_reg_gp = sol_reg_g[0]
+    sol_reg_sign_g[sol]= sol_reg_gp
     
     
 ## Algae acrage vs electricity
 for sol in solutions:
     df_reg['algae_acrage'] = A_ha[:,sol]
     
-    y = np.array(df_reg['algae_electricity_cost'])
+    y = np.array(df_reg['Unit Electricity price ($/MJ)'])
     X = np.array(df_reg['algae_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_aelectricity.loc[sol,:] = R2
+    R2_acrage_vs_aelectricity[sol] = R2
+    sol_reg_a = scipy.stats.pearsonr(X,y) 
+    sol_reg_ap = sol_reg_a[0]
+    sol_reg_sign_a[sol]= sol_reg_ap
 
 
 df_reg_R2['R2_acrage_vs_electricity'] = R2_acrage_vs_electricity
+df_reg_R2['R2_acrage_vs_electricity_sign'] = sol_reg_sign
 df_reg_R2['R2_acrage_vs_selectricity'] = R2_acrage_vs_selectricity
+df_reg_R2['R2_acrage_vs_selectricity_sign'] = sol_reg_sign_s
 df_reg_R2['R2_acrage_vs_gelectricity'] = R2_acrage_vs_gelectricity
+df_reg_R2['R2_acrage_vs_gelectricity_sign'] = sol_reg_sign_g
 df_reg_R2['R2_acrage_vs_aelectricity'] = R2_acrage_vs_aelectricity
+df_reg_R2['R2_acrage_vs_aelectricity_sign'] = sol_reg_sign_a
 
 
 
@@ -353,7 +462,7 @@ for sol in solutions:
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_cost.loc[sol,:] = R2
+    R2_acrage_vs_cost[sol] = R2
 
 
 ## Grass acrage vs marginal land cost
@@ -364,7 +473,7 @@ for sol in solutions:
     X = np.array(df_reg['grass_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_mgcost.loc[sol,:] = R2
+    R2_acrage_vs_mgcost[sol] = R2
     
     
 ## Algae acrage vs marginal land cost
@@ -375,7 +484,7 @@ for sol in solutions:
     X = np.array(df_reg['algae_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_macost.loc[sol,:] = R2
+    R2_acrage_vs_macost[sol] = R2
     
 
 df_reg_R2['R2_acrage_vs_cost'] = R2_acrage_vs_cost
@@ -391,7 +500,7 @@ for sol in solutions:
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_limit.loc[sol,:] = R2
+    R2_acrage_vs_limit[sol] = R2
 
 
 ## Grass acrage vs marginal land limits
@@ -402,7 +511,7 @@ for sol in solutions:
     X = np.array(df_reg['grass_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_mglimit.loc[sol,:] = R2
+    R2_acrage_vs_mglimit[sol] = R2
     
     
 ## Algae acrage vs marginal land limits
@@ -413,7 +522,7 @@ for sol in solutions:
     X = np.array(df_reg['algae_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_malimit.loc[sol,:] = R2
+    R2_acrage_vs_malimit[sol] = R2
     
 
 df_reg_R2['R2_acrage_vs_limit'] = R2_acrage_vs_limit
@@ -430,7 +539,7 @@ for sol in solutions:
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_cyield.loc[sol,:] = R2
+    R2_acrage_vs_cyield[sol] = R2
 
 ## Corn acrage vs Yield
 for sol in solutions:
@@ -440,7 +549,7 @@ for sol in solutions:
     X = np.array(df_reg['corn_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_syield.loc[sol,:] = R2
+    R2_acrage_vs_syield[sol] = R2
     
     
 ## Grass acrage vs marginal land cost
@@ -451,7 +560,7 @@ for sol in solutions:
     X = np.array(df_reg['grass_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_gyield.loc[sol,:] = R2
+    R2_acrage_vs_gyield[sol] = R2
     
     
 ## Algae acrage vs marginal land cost
@@ -462,7 +571,7 @@ for sol in solutions:
     X = np.array(df_reg['algae_acrage'])
     linear_model = LinearRegression().fit(X.reshape(-1, 1), y.reshape(-1, 1))
     R2 = linear_model.score(X.reshape(-1, 1), y.reshape(-1, 1))
-    R2_acrage_vs_ayield.loc[sol,:] = R2
+    R2_acrage_vs_ayield[sol] = R2
     
     
 df_reg_R2['R2_acrage_vs_cyield'] = R2_acrage_vs_cyield
