@@ -579,4 +579,4 @@ df_reg_R2['R2_acrage_vs_syield'] = R2_acrage_vs_syield
 df_reg_R2['R2_acrage_vs_gyield'] = R2_acrage_vs_gyield
 df_reg_R2['R2_acrage_vs_ayield'] = R2_acrage_vs_ayield
 
-df_reg_R2.to_excel('combined_regression_r2.xlsx')  
+df_reg_R2.to_excel('combined_regression_r2_f.xlsx')  
