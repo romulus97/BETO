@@ -25,30 +25,26 @@ version = 'district'
 #####################################################################
 
 # import excel sheet  
-df_geo_corn = pd.read_excel('combined_pivot_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for corn (state, land cost, yield etc)
+df_geo_corn = pd.read_excel('combined_pivot_corn_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for corn (state, land cost, yield etc)
 df_geo_soy = pd.read_excel('combined_pivot_soy_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for soy (state, land cost, yield etc)
 df_geo_grass = pd.read_excel('combined_pivot_grass_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for grass (state, land cost, yield etc) 
-df_geo_algea = pd.read_excel('combined_pivot_algea_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for algae (state, land cost, yield etc)   
+df_geo_algae = pd.read_excel('combined_pivot_algae_excel_electricity.xlsx',header=0, engine='openpyxl') #contains data sets for algae (state, land cost, yield etc)   
 
-# cultivation cost 
-cost_corn = list(df_geo_corn['CG_cost_per_ha']) # corn_cost_per_ha
-cost_soy = list(df_geo_soy['SB_cost_per_ha'])   # soy_cost_per_ha
-cost_soy_kg = list(df_geo_soy['SB_cost_per_kg'])   # soy_cost_per_kg
-cost_grass = list(df_geo_grass['Grass_cost_per_ha'])  # grass_cost_per_ha
-cost_algal = list(df_geo_algea['algea_cost_per_ha'])  # algae_cost_per_ha
-cost_algal_kg = list(df_geo_algea['algea_cost_per_kg'])  # algae_cost_per_kg
+df_geo_corn_GHG= pd.read_excel('Corn_GHG_power_sector.xlsx',header=0, engine='openpyxl') #yearly ghg emission as gCO2/MJ from corn
+df_geo_soy_GHG = pd.read_excel('Soy_GHG_power_sector.xlsx',header=0, engine='openpyxl') #yearly ghg emission as gCO2/MJ from soy
+df_geo_grass_GHG = pd.read_excel('Switchgrass_GHG_power_sector.xlsx',header=0, engine='openpyxl') #yearly ghg emission as gCO2/MJ from grass
+df_geo_algae_GHG = pd.read_excel('Algae_GHG_power_sector.xlsx',header=0, engine='openpyxl') #yearly ghg emission as gCO2/MJ from algae
 
-# process cost 
-process_cost_corn = list(df_geo_corn['corn_process_cost($/kg)']) # process cost for corn
-process_cost_soy = list(df_geo_soy['soy_process_cost($/kg)']) # process cost for corn
-process_cost_grass = list(df_geo_grass['grass_process_cost($/kg)'])  # process cost for corn
-process_cost_algal = list(df_geo_algea['algae_process_cost($/kg)'])  # process cost for corn
+df_geo_corn_MFSP = pd.read_excel('Corn_MFSP.xlsx',header=0, engine='openpyxl') #yearly cost as $/MJ from corn
+df_geo_soy_MFSP = pd.read_excel('Soy_MFSP.xlsx',header=0, engine='openpyxl') #yearly cost as $/MJ from soy
+df_geo_grass_MFSP = pd.read_excel('Switchgrass_MFSP.xlsx',header=0, engine='openpyxl') #yearly cost as $/MJ from grass
+df_geo_algae_MFSP = pd.read_excel('Algae_MFSP.xlsx',header=0, engine='openpyxl') #yearly cost as $/MJ from algae
 
 
 districts = list(df_geo_corn['STASD_N']) # list of ag_district code
 
-#specify grouping
-groups = 20
+# #specify grouping
+# groups = 20
 
 #district-to-hub data
 filename = 'AgD2H_48_cb.xlsx' # contains travel time and travel distance - these are not changed with year
@@ -82,23 +78,32 @@ marginal_land_costs = df_geo_grass.loc[:,'land_costs-$/ha'].values # $ per ha
 marginal_land_limits = df_geo_grass['land_limits_ha'].values # county ag production area in acres
 
 
-years = range(1998,2021)
+years = range(1998,2014)
 listyears =[]
 
 for year in years :
     listyears.append(str(year))
 
+
 # Corn Grain yield
-C_yield = df_geo_corn.loc[:,1998:].values  #yield in kg/ha
+C_yield = df_geo_corn.loc[:,1998:2013].values  #yield in kg/ha
+Corn_emission= df_geo_corn_GHG.loc[:,1998:2013].values  #gCO2/MJ
+Corn_cost= df_geo_corn_MFSP.loc[:,1998:2013].values  #$/MJ
 
 # Soybean yield
-S_yield = df_geo_soy.loc[:,1998:].values  #yield in kg/ha
+S_yield = df_geo_soy.loc[:,1998:2013].values  #yield in kg/ha
+Soy_emission = df_geo_soy_GHG.loc[:,1998:2013].values  #gCO2/MJ
+Soy_cost = df_geo_soy_MFSP.loc[:,1998:2013].values    #$/MJ
 
 # Grass yield
-G_yield = df_geo_grass.loc[:,1998:].values  #yield in kg/ha
+G_yield = df_geo_grass.loc[:,1998:2013].values  #yield in kg/ha
+Grass_emission = df_geo_grass_GHG.loc[:,1998:2013].values  #gCO2/MJ
+Grass_cost = df_geo_grass_MFSP.loc[:,1998:2013].values    #$/MJ
 
-# Algea yield
-A_yield = df_geo_grass.loc[:,1998:].values  #yield in kg/ha
+# Algae yield
+A_yield = df_geo_algae.loc[:,1998:2013].values  #yield in kg/ha
+Algae_emission = df_geo_algae_GHG.loc[:,1998:2013].values  #gCO2/MJ
+Algae_cost = df_geo_algae_MFSP.loc[:,1998:2013].values    #$/MJ
 
 
 ########################################################################
@@ -164,45 +169,27 @@ quota = Q_min*p #quota in biomass in kilograms as opposed to ethanol
  
 #####################################################################
 ##########           FUNCTION DEFINITION     ########################
-#####################################################################
-   
-###################################
-# CONVERSIONS
-# ha_to_acre = 2.47105 # Hectares to Acres
-# lb_to_kg= 0.453515 # pounds to kilograms
-# kg_to_L_Ethanol = 1.273723
+#####################################################################   
 
-# NOTE: MAKE SURE OF CONVERSIONS BELOW -- VALUES ABOVE NOW APPEAR ALL IN ACRES
-    
-# # test function
-# import f_test
-# obj1,obj2,product = f_test.test(v,reduced_land_costs,reduced_C_yield,reduced_land_limits, dist_map,map_C2H,dist_C2H,locations,hubs,quota)
-# simulation model (function to be evaluated by MOEA)
 def simulate(
  
-        var, # cultivation hectares per county for corn, hub-to-hub biomass flows
-        LC = land_costs, # land costs per county
-        MLC = marginal_land_costs,
+        var, # cultivation hectares per county for corn, hub-to-hub biomass flows (ha)
+        LC = land_costs, # land costs per county ($/ha)
+        MLC = marginal_land_costs, # marginal land cost per county ($/ha)
         C_Y = C_yield, # corn yield per acre
         S_Y = S_yield,  # soybean yield per acre  
         G_Y = G_yield,
         A_Y = A_yield,
+        C_emission = Corn_emission,
+        S_emission = Soy_emission,
+        G_emission = Grass_emission,
+        A_emission = Algae_emission,
+        C_cost = Corn_cost,
+        S_cost = Soy_cost,
+        G_cost = Grass_cost,
+        A_cost = Algae_cost,
         LL = land_limits, # land limits
         MLL = marginal_land_limits, 
-        CG_cost_per_ha = cost_corn,  #corn grain cost per hectare 
-        SB_cost_per_ha = cost_soy, # soy bean cost per hectare 
-        SB_cost_per_kg = cost_soy_kg, # soy bean cost per kg
-        G_cost_per_ha = cost_grass,
-        A_cost_per_ha = cost_algal, # soy bean cost per hectare 
-        A_cost_per_kg = cost_algal_kg, # soy bean cost per kg       
-        Proc_corn_cost= process_cost_corn,  #$/kg
-        Proc_soy_cost = process_cost_soy, #$/kg
-        Proc_grass_cost = process_cost_grass, #$/kg
-        Proc_algae_cost = process_cost_algal, #$/kg 
-        Nit_fert_CG = 307.6666667, # kg/ha*yr
-        NO2_emmission_CG = 4.0766, # kg/ha*yr
-        NO2_alloc_CG = 0.722474325, #%
-        NO2_emmission_S = 0.08, # kg/ha*yr
         DM = dist_map, # hub to hub distances
         D2H_map = map_D2H, # binary matrix mapping counties (rows) to hubs (columns)
         D2H = dist_D2H, # county to hub distances
@@ -213,35 +200,31 @@ def simulate(
         ):
     
     num_c = np.size(LC) #size of land cost 
-    num_h = np.size(hubs) #size of hubs
-    num_l = np.size(locations) #size of the locations 
+    # num_h = np.size(hubs) #size of hubs
+    # num_l = np.size(locations) #size of the locations 
      
-      # Empty parameters 
-    CG_cultivation_capex = 0 #not as single scalars. they need to be either vectors, or empty sets
-    SB_cultivation_capex = 0
-    G_cultivation_capex = 0
-    A_cultivation_capex = 0
+    CG_prod_nt_d = np.zeros((len(years),107))
+    SB_prod_nt_d = np.zeros((len(years),107))
+    G_prod_nt_d = np.zeros((len(years),107))
+    A_prod_nt_d = np.zeros((len(years),107))
     
-    CG_cultivation_opex = 0 #make them vectors of zeros
-    SB_cultivation_opex = 0
-    G_cultivation_opex = 0
-    A_cultivation_opex = 0
+    CG_ethanol_nt_d = np.zeros((len(years),107))
+    SB_oil_nt_d = np.zeros((len(years),107))
+    G_energy_nt_d = np.zeros((len(years),107))
+    A_energy_nt_d = np.zeros((len(years),107))
     
-    CG_cultivation_proc_opex = 0 #make them vectors of zeros
-    SB_cultivation_proc_opex = 0
-    G_cultivation_proc_opex = 0
-    A_cultivation_proc_opex = 0
+    GHG_emission_corn_yearly = np.zeros((len(years),107))
+    GHG_emission_soy_yearly = np.zeros((len(years),107))
+    GHG_emission_grass_yearly = np.zeros((len(years),107))
+    GHG_emission_algae_yearly = np.zeros((len(years),107))
+    GHG_impact_yearly = np.zeros((len(years),107))
     
-    CG_cultivation_proc_capex = 0 #make them vectors of zeros
-    SB_cultivation_proc_capex = 0
-    G_cultivation_proc_capex = 0
-    A_cultivation_proc_capex = 0
-    
-    GHG_emission_CG_cult = 0 #make them vectors of zeros
-    GHG_emission_S_cult = 0
-    GHG_emission_G_cult = 0
-    GHG_emission_A_cult= 0
-    
+    MFSP_corn_yearly = np.zeros((len(years),107))
+    MFSP_soy_yearly = np.zeros((len(years),107))
+    MFSP_grass_yearly = np.zeros((len(years),107))
+    MFSP_algae_yearly = np.zeros((len(years),107))
+    MFSP_total_yearly = np.zeros((len(years),107))
+     
     CG_prod_total = np.zeros((len(years), 1))
     CG_ethanol_total = np.zeros((len(years),1))
     SB_prod_total = np.zeros((len(years), 1))
@@ -251,42 +234,24 @@ def simulate(
     A_prod_total = np.zeros((len(years), 1))
     A_energy_total = np.zeros((len(years),1))
     
-    CG_CO2_emission_proc = np.zeros((len(years),1))
-    SB_CO2_emission_proc = np.zeros((len(years), 1))
-    G_CO2_emission_proc = np.zeros((len(years),1))
-    A_CO2_emission_proc = np.zeros((len(years), 1))
     
     Energy_total = np.zeros((len(years),1))
-    # var = np.zeros(214,)
+    Energy_year_total= np.zeros((len(years),107))
 
-    # Capital costs (need to expand)
-    L = np.array(LC) #$/acre
-    ML = np.array(MLC)
+    # L = np.array(LC) #$/acre
+    # ML = np.array(MLC)
     vc = (np.array(var[0:num_c]))/2
     vs = (np.array(var[0:num_c]))/2
     vg = (np.array(var[num_c:2*num_c])) 
     va = (np.array(var[num_c*2:]))      # planted agricultural areas (ha)
     
-    # VC = var[:107]
-    # VG = var[107:]
-    # vc = (np.array(VC))/2
-    # vs = (np.array(VC))/2
-    # v = (np.array(VG))
-        
-    CG_cultivation_capex += np.sum(vc[0:num_c]*(L+5977.4)) #  ha*$/acre (land cost+capital cost)*land usage
-    SB_cultivation_capex += np.sum(vs[0:num_c]*(L+6817)) #  ha*$/acre land cost is not change for any feedstock
-    G_cultivation_capex += np.sum(vg[0:num_c]*(ML+2300)) #  ha*$/acre (land cost+capital cost)*land usage
-    A_cultivation_capex += np.sum(va[0:num_c]*(ML+359504)) #  ha*$/acre (land cost+capital cost)*land usage
     
-    GHG_emission_CG_cult += np.sum(vc[0:num_c]*(Nit_fert_CG)*NO2_emmission_CG*NO2_alloc_CG) #  ha*$/acre (land cost+capital cost)*land usage
-    GHG_emission_S_cult += np.sum(vs[0:num_c]*NO2_emmission_S)
-
- 
-    # CG_cultivation_opex += np.sum((vc[0:num_c]*(CG_cost_per_ha))) #
-    # SB_cultivation_opex += np.sum((vs[0:num_c]*(SB_cost_per_ha)))
     Constraints = [] # constraints
     
     Z = []
+    GHG=[]
+    MFSP=[]
+    Energy_f=[]
     A = 0
     
     for year in years:
@@ -296,43 +261,111 @@ def simulate(
         G = G_Y[:,i]   # grass yield kg/ha
         Al = A_Y[:,i]   # algae yield kg/ha
         
-        # Constraints = [] # constraints
+        corn_GHG = C_emission[:,i]  # gco2/MJ
+        soy_GHG = S_emission[:,i]
+        grass_GHG = G_emission[:,i]
+        algae_GHG = A_emission[:,i]
         
-        # Per ha values (need to expand) # this is where we would put in code from Jack 
+                
+        corn_MFSP = C_cost[:,i]
+        soy_MFSP = S_cost[:,i]
+        grass_MFSP = G_cost[:,i]
+        algae_MFSP = A_cost[:,i]
         
         ##############################
         # Cultivation and Harvesting
     
         # Operating costs (need to expand)
-        CG_prod = np.sum(vc[0:num_c]*Y)   
-        CG_prod_total[i] = CG_prod         # total corn biomass production (kg)
-        CO2_emission_CG = np.sum(0.248502268*Y) # CO2 emission kg/yr
-        SB_prod = np.sum(vs[0:num_c]*S)
-        SB_prod_total[i] = SB_prod         # total soy biomass production (kg)
-        G_prod = np.sum(vg[0:num_c]*G)
-        G_prod_total[i] = G_prod           # total grass biomass production (kg)
-        A_prod = np.sum(va[0:num_c]*Al)
-        A_prod_total[i] = A_prod           # total algae biomass production (kg)
+        CG_prod_nt = vc[0:num_c]*Y
+        CG_prod_nt_d[i] = CG_prod_nt       # corn kg bipmass production for each district and each year
+        
+        # CG_prod = np.sum(vc[0:num_c]*Y)   
+        # CG_prod_total[i] = CG_prod         # total corn biomass production (kg)
+        
+        SB_prod_nt = vs[0:num_c]*S
+        SB_prod_nt_d[i] = SB_prod_nt       # soy kg bipmass production for each district and each year
+        
+        # SB_prod = np.sum(vs[0:num_c]*S)
+        # SB_prod_total[i] = SB_prod         # total soy biomass production (kg)    
+        
+        G_prod_nt = vg[0:num_c]*G
+        G_prod_nt_d[i] = G_prod_nt       # soy kg bipmass production for each district and each year
+        
+        # G_prod = np.sum(vg[0:num_c]*G)
+        # G_prod_total[i] = G_prod           # total grass biomass production (kg)
+        
+        A_prod_nt = va[0:num_c]*Al
+        A_prod_nt_d[i] = A_prod_nt       # soy kg bipmass production for each district and each year        
+        
+        # A_prod = np.sum(va[0:num_c]*Al)
+        # A_prod_total[i] = A_prod           # total algae biomass production (kg)
                 
         # Ethanol and oil produced at refinery at hub 'l'
-        CG_ethanol = CG_processing.sim(CG_prod) #kg ethanol
-        CG_ethanol_total[i] = CG_ethanol
-        CG_CO2_emission_proc[i] = CO2_emission_CG
+        CG_ethanol_nt = CG_processing.sim(CG_prod_nt) #kg ethanol for a year for each district 
+        CG_ethanol_nt_d[i] = CG_ethanol_nt
         
-        SB_oil = SB_processing.sim(SB_prod)  #kg soy oil
-        SB_oil_total[i] = SB_oil
+        # CG_ethanol = CG_processing.sim(CG_prod) #kg ethanol for a year
+        # CG_ethanol_total[i] = CG_ethanol
         
-        G_energy = G_processing.sim(G_prod) # kg biocrude 
-        G_energy_total[i] = G_energy
+        SB_oil_nt = CG_processing.sim(SB_prod_nt) #kg soy oil for a year for each district 
+        SB_oil_nt_d[i] = SB_oil_nt
         
-        A_energy = A_processing.sim(A_prod) # kg algae oil
-        A_energy_total[i] = A_energy
+        # SB_oil = SB_processing.sim(SB_prod)  #kg soy oil
+        # SB_oil_total[i] = SB_oil
         
-        Energy =(29.7 * CG_ethanol + 39.6 * SB_oil + 21* G_energy + 22 * A_energy)   # Ethanol * 29.7 MJ/kg + Soy Oil * 39.6 MJ/kg + biocrude * 21 MJ/kg + algae oil * 22 MJ/kg
+        G_energy_nt = CG_processing.sim(G_prod_nt) #kg biocrude for a year for each district 
+        G_energy_nt_d[i] = G_energy_nt
+        
+        # G_energy = G_processing.sim(G_prod) # kg biocrude 
+        # G_energy_total[i] = G_energy
+        
+        A_energy_nt = CG_processing.sim(A_prod_nt)  #kg algae oil for a year for each district 
+        A_energy_nt_d[i] = A_energy_nt
+        
+        # A_energy = A_processing.sim(A_prod) # kg algae oil
+        # A_energy_total[i] = A_energy
+        
+        Energy =sum((29.7 * CG_ethanol_nt) + (39.6 * SB_oil_nt) + (21* G_energy_nt) + (22 * A_energy_nt))   # Ethanol * 29.7 MJ/kg + Soy Oil * 39.6 MJ/kg + biocrude * 21 MJ/kg + algae oil * 22 MJ/kg
         Energy_total[i] = Energy   # total energy MJ/yr
+        Energy_f.append(Energy)
         
-        if i > 0:
-            A += abs(Energy_total[i] - Energy_total[i-1])
+        GHG_emission_corn = np.sum(corn_GHG * (29.7 * CG_ethanol_nt))
+        GHG_emission_corn_yearly[i] = GHG_emission_corn
+        
+        GHG_emission_soy = np.sum(soy_GHG * (39.6 * SB_oil_nt))
+        GHG_emission_soy_yearly[i] = GHG_emission_soy
+        
+        GHG_emission_grass = np.sum(grass_GHG * (21* G_energy_nt))
+        GHG_emission_grass_yearly[i] = GHG_emission_grass
+        
+        GHG_emission_algae = np.sum(algae_GHG * (22 * A_energy_nt))
+        GHG_emission_algae_yearly[i] = GHG_emission_algae
+        
+        GHG_impact = (GHG_emission_corn + GHG_emission_soy + GHG_emission_grass + GHG_emission_algae)/Energy
+        GHG_impact_yearly[i] = GHG_impact
+        
+        GHG.append(GHG_impact)
+        
+        MFSP_corn = np.sum(corn_MFSP* (29.7 * CG_ethanol_nt))
+        MFSP_corn_yearly[i] = MFSP_corn
+        
+        MFSP_soy = np.sum(soy_MFSP* (39.6 * SB_oil_nt))
+        MFSP_soy_yearly[i] = MFSP_soy
+        
+        MFSP_grass = np.sum(grass_MFSP* (21* G_energy_nt))
+        MFSP_grass_yearly[i] = MFSP_grass
+        
+        MFSP_algae = np.sum(algae_MFSP* (22 * A_energy_nt))
+        MFSP_algae_yearly[i] = MFSP_algae
+        
+        MFSP_total = (MFSP_corn + MFSP_soy + MFSP_grass + MFSP_algae)/Energy
+        MFSP_total_yearly[i] = MFSP_total
+        
+        MFSP.append(MFSP_total)
+        
+        
+        # if i > 0:
+        #     A += abs(Energy_total[i] - Energy_total[i-1])
             
   
         if (Q - Energy) < 0:
@@ -344,29 +377,31 @@ def simulate(
             shortfall = Q - Energy
     
         Z.append(shortfall)
-    
-    CG_prod_max_total = np.zeros((len(districts)))
-    SB_prod_max_total = np.zeros((len(districts)))
-    G_prod_max_total = np.zeros((len(districts)))
-    A_prod_max_total = np.zeros((len(districts)))
-    
-    
-    for i in districts: # districts = whole list of ag_district 
-        idx = districts.index(i)
-        Y_max = max(C_Y[idx,:]) # max corn yield kg/ha
-        S_max = max(S_Y[idx,:] )  # soy yield kg/ha
-        G_max = max(G_Y[idx,:])   # grass yield kg/ha
-        Al_max = max(A_Y[idx,:])   # algae yield kg/ha
-        
-        CG_prod_max= np.sum(vc[idx]*Y_max) # max corn biomass (kg)
-        SB_prod_max = np.sum(vs[idx]*S_max) # max soy biomass (kg)
-        G_prod_max = np.sum(vg[idx]*G_max) # max grass biomass (kg)
-        A_prod_max = np.sum(va[idx]*Al_max) # max algae biomass (kg)
 
-        CG_prod_max_total[idx] = CG_prod_max * (0.284774923 + 0.02565) # corn max biomass * (capital cost + labor)
-        SB_prod_max_total[idx] = SB_prod_max * (0.357131479 + 0.008339832) # soy max biomass * (capital cost + labor)
-        G_prod_max_total[idx] = G_prod_max * (0.92) # grass max biomass * (capital cost)
-        A_prod_max_total[idx] = A_prod_max * (1.6233249 + 0.0083398) # algae max biomass * (capital cost + labor)
+        
+    
+    # CG_prod_max_total = np.zeros((len(districts)))
+    # SB_prod_max_total = np.zeros((len(districts)))
+    # G_prod_max_total = np.zeros((len(districts)))
+    # A_prod_max_total = np.zeros((len(districts)))
+    
+    
+    # for i in districts: # districts = whole list of ag_district 
+    #     idx = districts.index(i)
+    #     Y_max = max(C_Y[idx,:]) # max corn yield kg/ha
+    #     S_max = max(S_Y[idx,:] )  # soy yield kg/ha
+    #     G_max = max(G_Y[idx,:])   # grass yield kg/ha
+    #     Al_max = max(A_Y[idx,:])   # algae yield kg/ha
+        
+    #     CG_prod_max= np.sum(vc[idx]*Y_max) # max corn biomass (kg)
+    #     SB_prod_max = np.sum(vs[idx]*S_max) # max soy biomass (kg)
+    #     G_prod_max = np.sum(vg[idx]*G_max) # max grass biomass (kg)
+    #     A_prod_max = np.sum(va[idx]*Al_max) # max algae biomass (kg)
+
+    #     CG_prod_max_total[idx] = CG_prod_max * (0.284774923 + 0.02565) # corn max biomass * (capital cost + labor)
+    #     SB_prod_max_total[idx] = SB_prod_max * (0.357131479 + 0.008339832) # soy max biomass * (capital cost + labor)
+    #     G_prod_max_total[idx] = G_prod_max * (0.92) # grass max biomass * (capital cost)
+    #     A_prod_max_total[idx] = A_prod_max * (1.6233249 + 0.0083398) # algae max biomass * (capital cost + labor)
         
     Constraints.append(Q * 0.98 - np.mean(Energy_total)) #LB 
     Constraints.append(np.mean(Energy_total) - Q * 1.02 ) #UB
@@ -381,42 +416,18 @@ def simulate(
     
     Constraints.append(c)
     
-    CG_cultivation_opex += np.sum((vc[0:num_c]*(CG_cost_per_ha))*len(years)) 
-    SB_cultivation_opex += np.sum((vs[0:num_c]*(SB_cost_per_ha))*len(years) +(SB_prod_total*(SB_cost_per_kg)))
-    G_cultivation_opex += np.sum((vg[0:num_c]*(G_cost_per_ha))*len(years))
-    A_cultivation_opex += np.sum((va[0:num_c]*(A_cost_per_ha))*len(years) +(A_prod_total*(A_cost_per_kg)))
-    
-    CG_cultivation_proc_opex += np.sum((CG_prod_total*(Proc_corn_cost))) 
-    SB_cultivation_proc_opex += np.sum((SB_prod_total*(Proc_soy_cost)))
-    G_cultivation_proc_opex += np.sum((G_prod_total*(Proc_grass_cost)))
-    A_cultivation_proc_opex += np.sum((A_prod_total*(Proc_algae_cost)))
-    
-    CG_cultivation_proc_capex += np.sum(CG_prod_max_total) 
-    SB_cultivation_proc_capex += np.sum(SB_prod_max_total)
-    G_cultivation_proc_capex += np.sum(G_prod_max_total)
-    A_cultivation_proc_capex += np.sum(A_prod_max_total)
-    
-    GHG_impact_CG = GHG_emission_CG_cult * 298 + CG_CO2_emission_proc * 1000 # GHG_Impact (g CO2e)
-    GHG_impact_S = GHG_emission_S_cult * 298                                 # GHG_Impact (g CO2e)
-    GHG_impact = GHG_impact_CG + GHG_impact_S
- 
-
+    # Returns list of objectives, Constraints
     Constraints = list(Constraints)
     
-        
-    # Returns list of objectives, Constraints
-    biomass_cost_corn = CG_cultivation_capex + CG_cultivation_opex + CG_cultivation_proc_opex + CG_cultivation_proc_capex
-    biomass_cost_soy = SB_cultivation_capex + SB_cultivation_opex + SB_cultivation_proc_opex + SB_cultivation_proc_capex
-    biomass_cost_grass = G_cultivation_capex + G_cultivation_opex + G_cultivation_proc_opex + G_cultivation_proc_capex
-    biomass_cost_algal = A_cultivation_capex + A_cultivation_opex + A_cultivation_proc_opex + A_cultivation_proc_capex
-    biomass_cost = biomass_cost_corn + biomass_cost_soy +biomass_cost_grass +biomass_cost_algal
+    min_MSFP = sum(MFSP)/len(MFSP)   
     min_shortfall = max(Z)
-    min_GHG = min(GHG_impact)
+    min_GHG = sum(GHG)/len(GHG)
+    min_energy = sum(Energy_f)/len(Energy_f)
     
-    # add another objective land usage 
     
+     
     ## just use cost as total 
-    return [biomass_cost, min_shortfall, A], Constraints ##
+    return [min_MSFP, min_shortfall, min_GHG, min_energy], Constraints ##biomass cost unit $ - min shortfall unit MJ - min_GHG g CO2e
     
 #return [biomass_cost,   np.sum(v[0:num_c]), np.sum(CS_refinery_capex), CS_travel_opex], Constraints
 
@@ -433,7 +444,7 @@ total_land_limit = list(df_total_cost['land_limits_ha'])
 g = np.size(total_land_cost)
 num_variables = g # + np.size(marginal_land_costs)
 num_constraints = 3 #+ g   #must match to contraints
-num_objs = 3
+num_objs = 4
 
 # problem = Problem(num_variables,num_objs,num_constraints)
 # problem.types[0:g+1] = Real(0,max(reduced_land_limits))
@@ -487,11 +498,11 @@ for s in solutions:
         O[idx,j] = s.objectives[j]
 
 df_D = pd.DataFrame(D)
-fn = 'Decision_Variables_borg_two_crop_trial' + version + '.csv'
+fn = 'Decision_Variables_borg_crops_GHG' + version + '.csv'
 df_D.to_csv(fn)
 
 df_O = pd.DataFrame(O)
-fn2 = 'Objective_functions_borg_two_crop_trial' + version + '.csv'
+fn2 = 'Objective_functions_borg_crops_GHG' + version + '.csv'
 df_O.to_csv(fn2)
 
 
